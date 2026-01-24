@@ -9,6 +9,7 @@ use std::{
     sync::{mpsc::Receiver, Mutex},
 };
 
+use bytes::Bytes;
 use cookie_store::{CookieStore, RawCookie, RawCookieParseError};
 use reqwest::header::HeaderValue;
 
@@ -38,7 +39,7 @@ fn cookies(cookie_store: &CookieStore, url: &url::Url) -> Option<HeaderValue> {
         return None;
     }
 
-    HeaderValue::from_maybe_shared(bytes::Bytes::from(s)).ok()
+    HeaderValue::from_maybe_shared(Bytes::from(s)).ok()
 }
 
 /// A [`cookie_store::CookieStore`] wrapped internally by a [`std::sync::Mutex`], suitable for use in
