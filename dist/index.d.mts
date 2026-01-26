@@ -14,8 +14,8 @@ interface CORSFetchConfig {
     proxy?: number;
     connectTimeout?: number;
     maxRedirections?: number;
-    userAgent: string;
-    danger: {
+    userAgent?: string;
+    danger?: {
       acceptInvalidCerts: boolean;
       acceptInvalidHostnames: boolean;
     };
