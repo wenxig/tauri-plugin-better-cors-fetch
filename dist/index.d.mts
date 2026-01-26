@@ -23,7 +23,7 @@ interface CORSFetchConfig {
 }
 type CORSFetchInit = RequestInit & Partial<CORSFetchConfig['request']>;
 declare class CORSFetch {
-  static init(): CORSFetch | undefined;
+  static init(): CORSFetch;
   protected constructor();
   private _config;
   config(newConfig: Partial<CORSFetchConfig>): void;
