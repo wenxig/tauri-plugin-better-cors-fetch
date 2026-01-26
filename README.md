@@ -17,6 +17,12 @@ An **unofficial** Tauri plugin that enables **seamless cross-origin (CORS) reque
 
 **1. Install Dependencies**
 
+Install the plugin by your package manager:
+
+```sh
+pnpm i https://github.com/delta-comic/tauri-plugin-cors-fetch-no-aws
+```
+
 Add the plugin to your `Cargo.toml`:
 
 ```toml
@@ -29,6 +35,12 @@ tauri-plugin-cors-fetch = { git = "https://github.com/delta-comic/tauri-plugin-c
 **2. Initialize Plugin**
 
 Register the plugin in your Tauri setup:
+
+```js
+// src/app.ts
+import { CORSFetch } from 'tauri-plugin-cors-fetch-no-aws'
+const cors = CORSFetch.init()
+```
 
 ```rust
 // src-tauri/src/lib.rs
@@ -44,7 +56,7 @@ pub fn run() {
 
 Add the required permission to your capability file:
 
-```json
+```jsonc
 // src-tauri/capabilities/default.json
 {
   "permissions": ["cors-fetch:default"]
@@ -53,7 +65,7 @@ Add the required permission to your capability file:
 
 Ensure `withGlobalTauri` is enabled in `tauri.conf.json`:
 
-```json
+```jsonc
 // src-tauri/tauri.conf.json
 {
   "app": {
@@ -74,10 +86,10 @@ const data = await response.json();
 
 ### Configuration
 
-You can fine-tune the behavior via `window.CORSFetch.config()`:
+You can fine-tune the behavior via `cors.config()` or `window.CORSFetch.config()`:
 
-```javascript
-window.CORSFetch.config({
+```js
+cors.config({
   include: [/^https?:\/\//i], // Patterns to proxy (default: all)
   exclude: ["https://api.openai.com/v1/chat/completions"],
   // Default request options for Tauri HTTP Client
