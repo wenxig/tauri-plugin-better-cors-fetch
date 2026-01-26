@@ -11,7 +11,7 @@ interface CORSFetchConfig {
   include: string[];
   exclude: string[];
   request: {
-    proxy?: number;
+    proxy?: Record<string, string>;
     connectTimeout?: number;
     maxRedirections?: number;
     userAgent?: string;
