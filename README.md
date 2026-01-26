@@ -1,11 +1,10 @@
-![tauri-plugin-cors-fetch](https://github.com/idootop/tauri-plugin-cors-fetch/raw/main/banner.png)
+![tauri-plugin-cors-fetch](./banner.png)
 
-[![crates.io](https://img.shields.io/crates/v/tauri-plugin-cors-fetch.svg)](https://crates.io/crates/tauri-plugin-cors-fetch)
-[![Download](https://img.shields.io/crates/d/tauri-plugin-cors-fetch.svg)](https://crates.io/crates/tauri-plugin-cors-fetch)
-[![MIT licensed](https://img.shields.io/crates/l/tauri-plugin-cors-fetch.svg)](./LICENSE)
-[![Documentation](https://docs.rs/tauri-plugin-cors-fetch/badge.svg)](https://docs.rs/crate/tauri-plugin-cors-fetch)
+[![MIT licensed](https://img.shields.io/github/license/delta-comic/tauri-plugin-cors-fetch-no-aws)](./LICENSE)
 
 An **unofficial** Tauri plugin that enables **seamless cross-origin (CORS) requests** by transparently proxying the native `fetch` API through Tauri's HTTP client.
+
+**Fork from <https://github.com/idootop/tauri-plugin-cors-fetch>**
 
 ## Features
 
@@ -20,9 +19,11 @@ An **unofficial** Tauri plugin that enables **seamless cross-origin (CORS) reque
 
 Add the plugin to your `Cargo.toml`:
 
-```shell
-# src-tauri
-cargo add tauri-plugin-cors-fetch
+```toml
+[dependencies]
+tauri-plugin-cors-fetch = { git = "https://github.com/delta-comic/tauri-plugin-cors-fetch-no-aws", branch = "main", features = [
+  "rustls-tls"
+] }
 ```
 
 **2. Initialize Plugin**
