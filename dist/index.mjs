@@ -2,6 +2,7 @@
 var CORSFetch = class CORSFetch {
 	static init() {
 		if (typeof window !== "undefined" && !window.CORSFetch) window.CORSFetch = new CORSFetch();
+		return window.CORSFetch;
 	}
 	constructor() {
 		window.fetchNative = window.fetch.bind(window);

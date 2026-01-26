@@ -32,6 +32,7 @@ export class CORSFetch {
     ) {
       window.CORSFetch = new CORSFetch()
     }
+    return window.CORSFetch
   }
   protected constructor() {
     window.fetchNative = window.fetch.bind(window)
