@@ -226,7 +226,7 @@ pub async fn fetch<R: Runtime>(
         builder = builder.cookie_provider(state.cookies_jar.clone());
       }
 
-      let mut request = builder.build()?.request(method.clone(), url);
+      let mut request = builder.build()?.request(method.clone(), url.clone());
 
       // POST and PUT requests should always have a 0 length content-length,
       // if there is no body. https://fetch.spec.whatwg.org/#http-network-or-cache-fetch
@@ -251,6 +251,16 @@ pub async fn fetch<R: Runtime>(
       if let Some(data) = data {
         request = request.body(data);
       }
+
+      log::info!(
+        "Fetching {} with headers {}",
+        url,
+        headers
+          .iter()
+          .map(|(k, v)| format!("{}: {}", k, v.to_str().unwrap()))
+          .collect::<Vec<_>>()
+          .join(", ")
+      );
 
       request = request.headers(headers);
 

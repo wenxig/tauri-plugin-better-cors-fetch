@@ -116,22 +116,23 @@ export class CORSFetch {
       req.headers.set('Content-Type', 'application/json')
 
     try {
+      const clientConfig = {
+        method: req.method,
+        url: urlStr,
+        headers: Object.entries(req.headers),
+        data: buffer.byteLength ? Array.from(new Uint8Array(buffer)) : null,
+        maxRedirections,
+        connectTimeout,
+        proxy,
+        danger,
+        userAgent,
+      }
 
       rid = await invoke("plugin:cors-fetch|fetch", {
-        clientConfig: {
-          method: req.method,
-          url: urlStr,
-          headers: Object.entries(req.headers),
-          data: buffer.byteLength ? Array.from(new Uint8Array(buffer)) : null,
-          maxRedirections,
-          connectTimeout,
-          proxy,
-          danger,
-          userAgent,
-        },
+        clientConfig
       })
 
-      console.debug(`[fetchCORS] ${urlStr} cleanup`)
+      console.debug(`[fetchCORS] ${urlStr}`, clientConfig)
 
       if (signal?.aborted) throw this.cancel_error
 

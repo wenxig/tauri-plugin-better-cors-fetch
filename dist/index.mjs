@@ -255,7 +255,7 @@ var CORSFetch = class CORSFetch {
 		if (signal?.aborted) throw this.cancel_error;
 		if (!req.headers.has("Content-Type")) req.headers.set("Content-Type", "application/json");
 		try {
-			rid = await invoke("plugin:cors-fetch|fetch", { clientConfig: {
+			const clientConfig = {
 				method: req.method,
 				url: urlStr,
 				headers: Object.entries(req.headers),
@@ -265,8 +265,9 @@ var CORSFetch = class CORSFetch {
 				proxy,
 				danger,
 				userAgent
-			} });
-			console.debug(`[fetchCORS] ${urlStr} cleanup`);
+			};
+			rid = await invoke("plugin:cors-fetch|fetch", { clientConfig });
+			console.debug(`[fetchCORS] ${urlStr}`, clientConfig);
 			if (signal?.aborted) throw this.cancel_error;
 			const { status, statusText, url, headers: responseHeaders, rid: _rid } = await invoke("plugin:cors-fetch|fetch_send", { rid });
 			responseRid = _rid;
