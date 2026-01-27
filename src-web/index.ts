@@ -63,10 +63,11 @@ export class CORSFetch {
   }
 
   public async fetchCORS(input: Parameters<typeof fetch>[0], init?: CORSFetchInit, force = false) {
-
     const urlStr = input instanceof Request ? input.url : String(input)
+    console.debug(`[fetchCORS] begin -> ${urlStr}`, input, init)
 
     if (!force && !this.shouldUseCORSProxy(urlStr)) {
+      console.debug(`[fetchCORS] ${urlStr} browser`)
       return window.fetchNative(input, init)
     }
 
@@ -93,6 +94,8 @@ export class CORSFetch {
         this.invoke("plugin:cors-fetch|fetch_cancel", { rid }).catch(() => { })
         rid = null
       }
+
+      console.debug(`[fetchCORS] ${urlStr} cleanup`)
     }
 
     const onAbort = () => cleanup()
@@ -107,7 +110,7 @@ export class CORSFetch {
       ...nativeInit
     } = (init || {})
 
-    const req = new Request(input, nativeInit)
+    const req = input instanceof Request ? input : new Request(input, nativeInit)
     const buffer = await req.arrayBuffer()
 
     if (signal?.aborted) throw this.cancel_error
@@ -127,6 +130,8 @@ export class CORSFetch {
           userAgent,
         },
       })
+
+      console.debug(`[fetchCORS] ${urlStr} cleanup`)
 
       if (signal?.aborted) throw this.cancel_error
 
