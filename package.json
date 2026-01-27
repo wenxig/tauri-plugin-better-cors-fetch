@@ -4,14 +4,13 @@
   "packageManager": "pnpm@10.27.0",
   "readme": "./README.md",
   "scripts": {
-    "build": "tsdown --config ./tsdown.config.ts",
-    "postinstall": "pnpm build"
+    "build": "tsdown --config ./tsdown.config.ts"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.9.1",
+    "es-toolkit": "^1.44.0",
     "tsdown": "^0.20.1",
-    "typescript": "^5.9.3",
-    "es-toolkit": "^1.44.0"
+    "typescript": "^5.9.3"
   },
   "type": "module",
   "types": "./dist/index.d.mts",

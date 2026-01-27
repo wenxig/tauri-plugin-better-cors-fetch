@@ -112,6 +112,9 @@ export class CORSFetch {
 
     if (signal?.aborted) throw this.cancel_error
 
+    if (!req.headers.has('Content-Type'))
+      req.headers.set('Content-Type', 'application/json')
+
     try {
 
       rid = await invoke("plugin:cors-fetch|fetch", {

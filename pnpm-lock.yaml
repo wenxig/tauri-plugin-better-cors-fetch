@@ -14,7 +14,6 @@ importers:
       es-toolkit:
         specifier: ^1.44.0
         version: 1.44.0
-    devDependencies:
       tsdown:
         specifier: ^0.20.1
         version: 0.20.1(typescript@5.9.3)

@@ -253,6 +253,7 @@ var CORSFetch = class CORSFetch {
 		const req = input instanceof Request ? input : new Request(input, nativeInit);
 		const buffer = await req.arrayBuffer();
 		if (signal?.aborted) throw this.cancel_error;
+		if (!req.headers.has("Content-Type")) req.headers.set("Content-Type", "application/json");
 		try {
 			rid = await invoke("plugin:cors-fetch|fetch", { clientConfig: {
 				method: req.method,
