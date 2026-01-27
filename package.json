@@ -5,7 +5,7 @@
   "readme": "./README.md",
   "scripts": {
     "build": "tsdown --config ./tsdown.config.ts",
-    "postinstall": "pnpm i && pnpm build"
+    "postinstall": "pnpm build"
   },
   "dependencies": {
     "es-toolkit": "^1.44.0"
