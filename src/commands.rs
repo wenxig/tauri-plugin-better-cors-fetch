@@ -129,11 +129,12 @@ fn proxy_creator(
       basic_auth,
       no_proxy,
     }) => {
-      let mut proxy = proxy_fn(url)?;
+      let mut proxy = proxy_fn(url.clone())?;
       if let Some(basic_auth) = basic_auth {
         proxy = proxy.basic_auth(&basic_auth.username, &basic_auth.password);
       }
       if let Some(no_proxy) = no_proxy {
+        log::warn!("request to {url} with no proxy!");
         proxy = proxy.no_proxy(NoProxy::from_string(&no_proxy));
       }
       Ok(proxy)

@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
-    "lib": ["ESNext", "DOM"],
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
     "emitDecoratorMetadata": true,
     "strict": true,
     "target": "ESNext",
@@ -20,7 +23,9 @@
     "noImplicitAny": true,
     "noImplicitOverride": true,
     "isolatedModules": true,
-    "noImplicitThis": true,
+    "noImplicitThis": true
   },
-  "include": ["./src-web/*"],
+  "include": [
+    "./src-web/*"
+  ],
 }

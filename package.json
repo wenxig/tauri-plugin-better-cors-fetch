@@ -1,10 +1,14 @@
 {
   "name": "tauri-plugin-cors-fetch-no-aws",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "packageManager": "pnpm@10.27.0",
   "readme": "./README.md",
   "scripts": {
-    "build": "tsdown --config ./tsdown.config.ts"
+    "build": "tsdown --config ./tsdown.config.ts",
+    "postinstall": "pnpm i && pnpm build"
+  },
+  "dependencies": {
+    "es-toolkit": "^1.44.0"
   },
   "devDependencies": {
     "tsdown": "^0.20.1",

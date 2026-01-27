@@ -1,3 +1,5 @@
+import { isString, merge } from "es-toolkit"
+
 declare global {
   interface Window {
     CORSFetch?: CORSFetch
@@ -8,8 +10,8 @@ declare global {
 }
 
 export interface CORSFetchConfig {
-  include: string[]
-  exclude: string[]
+  include: (string | RegExp)[]
+  exclude: (string | RegExp)[]
   request: {
     proxy?: Record<string, string>,
     connectTimeout?: number,
@@ -56,37 +58,40 @@ export class CORSFetch {
   };
 
   public config(newConfig: Partial<CORSFetchConfig>) {
-    this._config = this.deepMerge(this._config, newConfig)
+
+    this._config = merge(this._config, newConfig)
   }
 
   public async fetchCORS(input: Parameters<typeof fetch>[0], init?: CORSFetchInit, force = false) {
+
     const urlStr = input instanceof Request ? input.url : String(input)
 
     if (!force && !this.shouldUseCORSProxy(urlStr)) {
       return window.fetchNative(input, init)
     }
 
-    const signal = init?.signal
+    const signal =
+      isString(input) ? init?.signal
+        : (input instanceof URL) ? init?.signal
+          : init?.signal ?? input.signal
     if (signal?.aborted) throw this.cancel_error
 
     let rid: string | null = null
     let responseRid: string | null = null
-    let isFinished = false
 
     const cleanup = () => {
-      if (isFinished) return
-      isFinished = true
-
       signal?.removeEventListener("abort", onAbort)
 
       if (responseRid !== null) {
         this.invoke("plugin:cors-fetch|fetch_cancel_body", {
           rid: responseRid,
         }).catch(() => { })
+        responseRid = null
       }
 
       if (rid !== null) {
         this.invoke("plugin:cors-fetch|fetch_cancel", { rid }).catch(() => { })
+        rid = null
       }
     }
 
@@ -206,9 +211,8 @@ export class CORSFetch {
   }
 
   private matchesPattern(url: string, patterns: (string | RegExp)[]) {
-    if (!patterns || patterns.length === 0) return false
     return patterns.some((pattern) => {
-      if (typeof pattern === "string") return url.includes(pattern)
+      if (isString(pattern)) return url.includes(pattern)
       if (pattern instanceof RegExp) return pattern.test(url)
       return false
     })
@@ -236,26 +240,5 @@ export class CORSFetch {
 
     // Default: proxy all http(s) requests
     return /^https?:\/\//i.test(url)
-  }
-
-  private deepMerge<T extends Record<any, any>, TS extends Record<any, any>>(target: T, source: TS): T & TS {
-    const isObject = (item: unknown): item is object => {
-      return (!!item) && typeof item === "object" && !Array.isArray(item)
-    }
-    const output: Record<any, any> = { ...target }
-    if (isObject(target) && isObject(source)) {
-      Object.keys(source).forEach((key) => {
-        if (isObject(source[key])) {
-          if (!(key in target)) {
-            Object.assign(output, { [key]: source[key] })
-          } else {
-            output[key] = this.deepMerge(target[key], source[key])
-          }
-        } else {
-          Object.assign(output, { [key]: source[key] })
-        }
-      })
-    }
-    return output
   }
 }
