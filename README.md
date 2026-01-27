@@ -15,7 +15,7 @@ An **unofficial** Tauri plugin that enables **seamless cross-origin (CORS) reque
 
 ## Quick Start
 
-**1. Install Dependencies**
+### 1. Install Dependencies
 
 Install the plugin by your package manager:
 
@@ -32,7 +32,7 @@ tauri-plugin-cors-fetch = { git = "https://github.com/delta-comic/tauri-plugin-c
 ] }
 ```
 
-**2. Initialize Plugin**
+### 2. Initialize Plugin
 
 Register the plugin in your Tauri setup:
 
@@ -52,7 +52,7 @@ pub fn run() {
 }
 ```
 
-**3. Configure Permissions & Settings**
+### 3. Configure Permissions & Settings
 
 Add the required permission to your capability file:
 
