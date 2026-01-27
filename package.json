@@ -17,11 +17,8 @@
   "types": "./dist/index.d.mts",
   "main": "./dist/index.mjs",
   "files": [
-    "./src-web",
-    "./tsconfig.json",
+    "./dist",
     "./package.json",
-    "./tsdown.config.ts",
-    "./README.md",
-    "./pnpm-lock.yaml"
+    "./README.md"
   ]
 }
