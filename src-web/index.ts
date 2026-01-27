@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api/core"
 import { isString, merge } from "es-toolkit"
 
 declare global {
@@ -28,12 +29,8 @@ export type CORSFetchInit = RequestInit & Partial<CORSFetchConfig['request']>
 
 export class CORSFetch {
   public static init() {
-    if (
-      typeof window !== "undefined" &&
-      !window.CORSFetch
-    ) {
+    if (!window.CORSFetch)
       window.CORSFetch = new CORSFetch()
-    }
     return window.CORSFetch!
   }
   protected constructor() {
@@ -84,14 +81,14 @@ export class CORSFetch {
       signal?.removeEventListener("abort", onAbort)
 
       if (responseRid !== null) {
-        this.invoke("plugin:cors-fetch|fetch_cancel_body", {
+        invoke("plugin:cors-fetch|fetch_cancel_body", {
           rid: responseRid,
         }).catch(() => { })
         responseRid = null
       }
 
       if (rid !== null) {
-        this.invoke("plugin:cors-fetch|fetch_cancel", { rid }).catch(() => { })
+        invoke("plugin:cors-fetch|fetch_cancel", { rid }).catch(() => { })
         rid = null
       }
 
@@ -117,7 +114,7 @@ export class CORSFetch {
 
     try {
 
-      rid = await this.invoke("plugin:cors-fetch|fetch", {
+      rid = await invoke("plugin:cors-fetch|fetch", {
         clientConfig: {
           method: req.method,
           url: urlStr,
@@ -141,7 +138,7 @@ export class CORSFetch {
         url,
         headers: responseHeaders,
         rid: _rid,
-      } = await this.invoke<{
+      } = await invoke<{
         statusText: string,
         url: string
         rid: string
@@ -161,7 +158,7 @@ export class CORSFetch {
         }
 
         try {
-          const data = await this.invoke<ArrayBuffer>("plugin:cors-fetch|fetch_read_body", {
+          const data = await invoke<ArrayBuffer>("plugin:cors-fetch|fetch_read_body", {
             rid: responseRid,
           })
           const dataUint8 = new Uint8Array(data)
@@ -210,10 +207,6 @@ export class CORSFetch {
   }
 
   private cancel_error = "User cancelled the request";
-
-  private invoke<T>(method: string, args: Record<string, any>): Promise<T> {
-    return (<any>window).__TAURI_INTERNALS__.invoke(method, args)
-  }
 
   private matchesPattern(url: string, patterns: (string | RegExp)[]) {
     return patterns.some((pattern) => {

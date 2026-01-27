@@ -8,17 +8,20 @@
     "postinstall": "pnpm build"
   },
   "dependencies": {
-    "es-toolkit": "^1.44.0"
-  },
-  "devDependencies": {
+    "@tauri-apps/api": "^2.9.1",
     "tsdown": "^0.20.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "es-toolkit": "^1.44.0"
   },
   "type": "module",
   "types": "./dist/index.d.mts",
   "main": "./dist/index.mjs",
   "files": [
-    "./dist/index.d.mts",
-    "./dist/index.mjs"
+    "./src-web",
+    "./tsconfig.json",
+    "./package.json",
+    "./tsdown.config.ts",
+    "./README.md",
+    "./pnpm-lock.yaml"
   ]
 }

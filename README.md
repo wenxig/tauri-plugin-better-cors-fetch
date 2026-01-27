@@ -63,17 +63,6 @@ Add the required permission to your capability file:
 }
 ```
 
-Ensure `withGlobalTauri` is enabled in `tauri.conf.json`:
-
-```jsonc
-// src-tauri/tauri.conf.json
-{
-  "app": {
-    "withGlobalTauri": true
-  }
-}
-```
-
 ## Usage
 
 Once initialized, the plugin automatically hooks into the global `fetch`. No changes to your frontend code are required:
