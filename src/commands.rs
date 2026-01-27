@@ -204,6 +204,8 @@ pub async fn fetch<R: Runtime>(
 
       if let Some(timeout) = connect_timeout {
         builder = builder.connect_timeout(Duration::from_millis(timeout));
+      } else {
+        builder = builder.connect_timeout(Duration::from_millis(10000));
       }
 
       if let Some(max_redirections) = max_redirections {
