@@ -61,7 +61,7 @@ export class CORSFetch {
 
   public async fetchCORS(input: Parameters<typeof fetch>[0], init?: CORSFetchInit, force = false) {
     const urlStr = input instanceof Request ? input.url : String(input)
-    console.debug(`[fetchCORS] begin -> ${urlStr}`, input, init)
+    console.debug(`[fetchCORS] begin -> ${urlStr}`)
 
     if (!force && !this.shouldUseCORSProxy(urlStr)) {
       console.debug(`[fetchCORS] ${urlStr} browser`)

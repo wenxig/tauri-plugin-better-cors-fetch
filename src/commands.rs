@@ -188,7 +188,7 @@ pub async fn fetch<R: Runtime>(
   let method = Method::from_bytes(method.as_bytes())?;
 
   let mut headers = HeaderMap::new();
-  for (h, v) in headers_raw {
+  for (h, v) in &headers_raw {
     let name = HeaderName::from_str(&h)?;
     headers.append(name, HeaderValue::from_str(&v)?);
   }
@@ -253,13 +253,18 @@ pub async fn fetch<R: Runtime>(
       }
 
       log::info!(
-        "Fetching {} with headers {}",
+        "Fetching {} with\n --send headers-- \n {} \n --ipc header--\n {}",
         url,
         headers
           .iter()
-          .map(|(k, v)| format!("{}: {}", k, v.to_str().unwrap()))
+          .map(|(k, v)| format!("[{}]: [{}]", k, v.to_str().unwrap()))
           .collect::<Vec<_>>()
-          .join(", ")
+          .join("\n"),
+        headers_raw
+          .iter()
+          .map(|(k, v)| format!("[{}]: [{}]", k, v))
+          .collect::<Vec<_>>()
+          .join("\n")
       );
 
       request = request.headers(headers);
