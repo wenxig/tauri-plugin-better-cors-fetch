@@ -126,11 +126,12 @@ export class CORSFetch {
         userAgent,
       }
 
+
+      console.debug(`[fetchCORS] ${urlStr}`, clientConfig)
+      
       rid = await invoke("plugin:cors-fetch|fetch", {
         clientConfig
       })
-
-      console.debug(`[fetchCORS] ${urlStr}`, clientConfig)
 
       if (signal?.aborted) throw this.cancel_error
 
