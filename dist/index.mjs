@@ -265,7 +265,7 @@ var CORSFetch = class CORSFetch {
 				danger,
 				userAgent
 			};
-			console.debug(`[fetchCORS] ${urlStr}`, clientConfig);
+			console.debug(`[fetchCORS] ${urlStr}`, "config:", clientConfig, "headers:", req.headers, "request:", req);
 			rid = await invoke("plugin:cors-fetch|fetch", { clientConfig });
 			if (signal?.aborted) throw this.cancel_error;
 			const { status, statusText, url, headers: responseHeaders, rid: _rid } = await invoke("plugin:cors-fetch|fetch_send", { rid });

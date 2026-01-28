@@ -127,8 +127,8 @@ export class CORSFetch {
       }
 
 
-      console.debug(`[fetchCORS] ${urlStr}`, clientConfig)
-      
+      console.debug(`[fetchCORS] ${urlStr}`, 'config:', clientConfig, 'headers:', req.headers, 'request:', req)
+
       rid = await invoke("plugin:cors-fetch|fetch", {
         clientConfig
       })
