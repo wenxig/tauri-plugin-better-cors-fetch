@@ -245,7 +245,6 @@ var CORSFetch = class CORSFetch {
 				invoke("plugin:cors-fetch|fetch_cancel", { rid }).catch(() => {});
 				rid = null;
 			}
-			console.debug(`[fetchCORS] ${urlStr} cleanup`);
 		};
 		const onAbort = () => cleanup();
 		signal?.addEventListener("abort", onAbort);

@@ -172,6 +172,8 @@ pub async fn fetch<R: Runtime>(
   state: State<'_, Http>,
   client_config: ClientConfig,
 ) -> crate::Result<ResourceId> {
+  log::info!("Fetch config\n{:?}", client_config);
+
   let ClientConfig {
     method,
     url,
