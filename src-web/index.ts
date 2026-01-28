@@ -117,7 +117,7 @@ export class CORSFetch {
       const clientConfig = {
         method: req.method,
         url: urlStr,
-        headers: Object.entries(req.headers),
+        headers: Array.from(req.headers.entries()),
         data: buffer.byteLength ? Array.from(new Uint8Array(buffer)) : null,
         maxRedirections,
         connectTimeout,

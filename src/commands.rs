@@ -66,14 +66,14 @@ pub struct FetchResponse {
   rid: ResourceId,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DangerousSettings {
   accept_invalid_certs: bool,
   accept_invalid_hostnames: bool,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ClientConfig {
   method: String,
@@ -87,7 +87,7 @@ pub struct ClientConfig {
   user_agent: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Proxy {
   all: Option<UrlOrConfig>,
@@ -95,7 +95,7 @@ pub struct Proxy {
   https: Option<UrlOrConfig>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(untagged)]
 pub enum UrlOrConfig {
@@ -103,7 +103,7 @@ pub enum UrlOrConfig {
   Config(ProxyConfig),
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProxyConfig {
   url: String,
@@ -111,7 +111,7 @@ pub struct ProxyConfig {
   no_proxy: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct BasicAuth {
   username: String,
   password: String,
@@ -172,7 +172,10 @@ pub async fn fetch<R: Runtime>(
   state: State<'_, Http>,
   client_config: ClientConfig,
 ) -> crate::Result<ResourceId> {
-  log::info!("Fetch config\n{:?}", client_config);
+  log::debug!(
+    "Fetch config\n{:?}",
+    serde_json::to_string_pretty(&client_config)
+  );
 
   let ClientConfig {
     method,
@@ -254,7 +257,7 @@ pub async fn fetch<R: Runtime>(
         request = request.body(data);
       }
 
-      log::info!(
+      log::debug!(
         "Fetching {} with\n --send headers-- \n {} \n --ipc header--\n {}",
         url,
         headers
