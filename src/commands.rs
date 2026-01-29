@@ -173,8 +173,8 @@ pub async fn fetch<R: Runtime>(
   client_config: ClientConfig,
 ) -> crate::Result<ResourceId> {
   log::debug!(
-    "Fetch config\n{:?}",
-    serde_json::to_string_pretty(&client_config)
+    "Fetch config\n{}",
+    serde_json::to_string_pretty(&client_config).unwrap()
   );
 
   let ClientConfig {
