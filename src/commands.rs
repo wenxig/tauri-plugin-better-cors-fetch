@@ -66,17 +66,20 @@ pub struct FetchResponse {
   rid: ResourceId,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct DangerousSettings {
   accept_invalid_certs: bool,
   accept_invalid_hostnames: bool,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct ClientConfig {
   method: String,
+  #[ts(type = "string")]
   url: url::Url,
   headers: Vec<(String, String)>,
   data: Option<Vec<u8>>,
@@ -87,31 +90,35 @@ pub struct ClientConfig {
   user_agent: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct Proxy {
   all: Option<UrlOrConfig>,
   http: Option<UrlOrConfig>,
   https: Option<UrlOrConfig>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 #[serde(untagged)]
+#[ts(export)]
 pub enum UrlOrConfig {
   Url(String),
   Config(ProxyConfig),
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct ProxyConfig {
   url: String,
   basic_auth: Option<BasicAuth>,
   no_proxy: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
+#[ts(export)]
 pub struct BasicAuth {
   username: String,
   password: String,

@@ -37,6 +37,7 @@ cookie_store = { version = "0.22", features = ["serde"] }
 bytes = { version = "1" }
 tracing = { version = "0.1" }
 log = "0.4.29"
+ts-rs = "10.1.0"
 
 [build-dependencies]
 tauri-plugin = { version = "2", features = ["build"] }
