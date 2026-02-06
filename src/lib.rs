@@ -6,14 +6,16 @@
 //!
 //! Enabling Cross-Origin Resource Sharing (CORS) for Fetch Requests within Tauri applications.
 
-use std::{collections::HashMap, sync::{Arc, Mutex}};
+use std::sync::Arc;
 
+use dashmap::DashMap;
 pub use reqwest;
 use reqwest::Client;
 use tauri::{
   plugin::{Builder, TauriPlugin},
   Manager, Runtime,
 };
+mod request;
 
 pub use error::{Error, Result};
 mod commands;
@@ -27,7 +29,7 @@ const COOKIES_FILENAME: &str = ".cookies";
 pub(crate) struct Http {
   #[cfg(feature = "cookies")]
   cookies_jar: std::sync::Arc<crate::cookies::CookieStoreMutex>,
-  poll: Mutex<HashMap<String, Arc<Client>>>,
+  pool: DashMap<request::ClientCacheKey, Arc<Client>>,
 }
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
@@ -57,7 +59,7 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
 
         let state = Http {
           cookies_jar: std::sync::Arc::new(cookies_jar),
-          poll: Mutex::new(HashMap::new()),
+          pool: DashMap::new(),
         };
 
         app.manage(state);

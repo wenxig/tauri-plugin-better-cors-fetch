@@ -2,16 +2,18 @@
 // SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: MIT
 
+use crate::{
+  request::{get_requester, ClientConfig, ContentConfig},
+  Error, Http, Result,
+};
 use http::{header, HeaderMap, HeaderName, HeaderValue, Method, StatusCode};
-use reqwest::{redirect::Policy, Client, NoProxy};
-use serde::{Deserialize, Serialize};
-use std::{future::Future, pin::Pin, str::FromStr, sync::Arc, time::Duration};
+use serde::Serialize;
+use std::{future::Future, pin::Pin, sync::Arc, time::Duration};
 use tauri::{
   async_runtime::Mutex, command, Manager, ResourceId, ResourceTable, Runtime, State, Webview,
 };
 use tokio::sync::oneshot::{channel, Receiver, Sender};
-
-use crate::{Error, Http, Result};
+use tracing::Level;
 
 struct ReqwestResponse(reqwest::Response);
 impl tauri::Resource for ReqwestResponse {}
@@ -66,175 +68,13 @@ pub struct FetchResponse {
   rid: ResourceId,
 }
 
-#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct DangerousSettings {
-  accept_invalid_certs: bool,
-  accept_invalid_hostnames: bool,
-}
-
-#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct ContentConfig {
-  method: String,
-  #[ts(type = "string")]
-  url: url::Url,
-  headers: Vec<(String, String)>,
-  data: Option<Vec<u8>>,
-  client: ClientConfig,
-}
-
-#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct ClientConfig {
-  connect_timeout: Option<u64>,
-  max_redirections: Option<usize>,
-  proxy: Option<Proxy>,
-  danger: Option<DangerousSettings>,
-  user_agent: Option<String>,
-}
-
-#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct Proxy {
-  all: Option<UrlOrConfig>,
-  http: Option<UrlOrConfig>,
-  https: Option<UrlOrConfig>,
-}
-
-#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
-#[serde(rename_all = "camelCase")]
-#[serde(untagged)]
-#[ts(export)]
-pub enum UrlOrConfig {
-  Url(String),
-  Config(ProxyConfig),
-}
-
-#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct ProxyConfig {
-  url: String,
-  basic_auth: Option<BasicAuth>,
-  no_proxy: Option<String>,
-}
-
-#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
-#[ts(export)]
-pub struct BasicAuth {
-  username: String,
-  password: String,
-}
-
-fn build_requester(state: &Http, config: &ClientConfig) -> Result<Client> {
-  let mut builder = reqwest::ClientBuilder::new();
-
-  if let Some(danger_config) = &config.danger {
-    builder = builder
-      .danger_accept_invalid_certs(danger_config.accept_invalid_certs)
-      .danger_accept_invalid_hostnames(danger_config.accept_invalid_hostnames)
-  }
-
-  if let Some(timeout) = config.connect_timeout {
-    builder = builder.connect_timeout(Duration::from_millis(timeout));
-  } else {
-    builder = builder.connect_timeout(Duration::from_millis(10000));
-  }
-
-  if let Some(max_redirections) = config.max_redirections {
-    builder = builder.redirect(if max_redirections == 0 {
-      Policy::none()
-    } else {
-      Policy::limited(max_redirections)
-    });
-  }
-
-  if let Some(proxy_config) = &config.proxy {
-    builder = attach_proxy(proxy_config, builder)?;
-  }
-
-  #[cfg(feature = "cookies")]
-  {
-    builder = builder.cookie_provider(state.cookies_jar.clone());
-  }
-  Ok(builder.build()?)
-}
-
-fn get_requester(state: &Http, config: &ClientConfig) -> Arc<Client> {
-  let key = {
-    let danger = config.danger.as_ref();
-    let proxy = config.proxy.as_ref();
-    format!("{:?}{:?}{:?}", danger, proxy, config.max_redirections)
-  };
-
-  let new_client = Arc::new(build_requester(state, config).unwrap());
-
-  let mut map = state.poll.lock().unwrap();
-  let entry = map.entry(key).or_insert_with(|| Arc::clone(&new_client));
-  Arc::clone(entry)
-}
-
-#[inline]
-fn proxy_creator(
-  url_or_config: &UrlOrConfig,
-  proxy_fn: fn(String) -> reqwest::Result<reqwest::Proxy>,
-) -> reqwest::Result<reqwest::Proxy> {
-  match url_or_config {
-    UrlOrConfig::Url(url) => Ok(proxy_fn(url.clone())?),
-    UrlOrConfig::Config(ProxyConfig {
-      url,
-      basic_auth,
-      no_proxy,
-    }) => {
-      let mut proxy = proxy_fn(url.clone())?;
-      if let Some(basic_auth) = basic_auth {
-        proxy = proxy.basic_auth(&basic_auth.username, &basic_auth.password);
-      }
-      if let Some(no_proxy) = no_proxy {
-        log::warn!("request to {url} with no proxy!");
-        proxy = proxy.no_proxy(NoProxy::from_string(&no_proxy));
-      }
-      Ok(proxy)
-    }
-  }
-}
-
-fn attach_proxy(
-  proxy: &Proxy,
-  mut builder: reqwest::ClientBuilder,
-) -> crate::Result<reqwest::ClientBuilder> {
-  let Proxy { all, http, https } = proxy;
-
-  if let Some(all) = all {
-    let proxy = proxy_creator(all, reqwest::Proxy::all)?;
-    builder = builder.proxy(proxy);
-  }
-
-  if let Some(http) = http {
-    let proxy = proxy_creator(http, reqwest::Proxy::http)?;
-    builder = builder.proxy(proxy);
-  }
-
-  if let Some(https) = https {
-    let proxy = proxy_creator(https, reqwest::Proxy::https)?;
-    builder = builder.proxy(proxy);
-  }
-
-  Ok(builder)
-}
-
 #[command]
 pub async fn fetch<R: Runtime>(
   webview: Webview<R>,
   state: State<'_, Http>,
   content_config: ContentConfig,
 ) -> crate::Result<ResourceId> {
-  log::debug!(
+  tracing::debug!(
     "Fetch config\n{}",
     serde_json::to_string_pretty(&content_config).unwrap()
   );
@@ -257,10 +97,19 @@ pub async fn fetch<R: Runtime>(
   let scheme = url.scheme();
   let method = Method::from_bytes(method.as_bytes())?;
 
-  let mut headers = HeaderMap::new();
+  let mut headers = HeaderMap::with_capacity(headers_raw.len());
+
   for (h, v) in headers_raw {
-    let name = HeaderName::from_str(&h)?;
-    headers.append(name, HeaderValue::from_str(&v)?);
+    let name = HeaderName::from_bytes(h.as_bytes()).map_err(|e| {
+      tracing::warn!("Invalid header name from frontend: {}", h);
+      e
+    })?;
+    let value = HeaderValue::from_bytes(v.as_bytes()).map_err(|e| {
+      tracing::warn!("Invalid header value from frontend: {} = {}", h, v);
+      e
+    })?;
+
+    headers.append(name, value);
   }
 
   match scheme {
@@ -276,41 +125,40 @@ pub async fn fetch<R: Runtime>(
       // POST and PUT requests should always have a 0 length content-length,
       // if there is no body. https://fetch.spec.whatwg.org/#http-network-or-cache-fetch
       if data.is_none() && matches!(method, Method::POST | Method::PUT) {
-        headers.append(header::CONTENT_LENGTH, HeaderValue::from_str("0")?);
+        headers.append(header::CONTENT_LENGTH, HeaderValue::from_static("0"));
       }
 
       if headers.contains_key(header::RANGE) {
         // https://fetch.spec.whatwg.org/#http-network-or-cache-fetch step 18
         // If httpRequest's header list contains `Range`, then append (`Accept-Encoding`, `identity`)
-        headers.append(header::ACCEPT_ENCODING, HeaderValue::from_str("identity")?);
+        headers.append(
+          header::ACCEPT_ENCODING,
+          HeaderValue::from_static("identity"),
+        );
       }
 
       // Set User Agent
-      if !headers.contains_key(header::USER_AGENT) && user_agent.is_some() {
-        headers.append(
-          header::USER_AGENT,
-          HeaderValue::from_str(user_agent.as_ref().unwrap().as_str())?,
-        );
+      if !headers.contains_key(header::USER_AGENT) {
+        if let Some(ua) = user_agent {
+          if let Ok(value) = HeaderValue::from_str(ua.as_str()) {
+            headers.append(header::USER_AGENT, value);
+          } else {
+            tracing::warn!("Invalid User-Agent: {}", ua);
+          }
+        }
       }
 
       if let Some(data) = data {
         request = request.body(data.clone());
       }
-
-      log::debug!(
-        "Fetching {} with\n --send headers-- \n {} \n --ipc header--\n {}",
-        url,
-        headers
-          .iter()
-          .map(|(k, v)| format!("[{}]: [{}]", k, v.to_str().unwrap()))
-          .collect::<Vec<_>>()
-          .join("\n"),
-        headers_raw
-          .iter()
-          .map(|(k, v)| format!("[{}]: [{}]", k, v))
-          .collect::<Vec<_>>()
-          .join("\n")
-      );
+      if tracing::enabled!(Level::DEBUG) {
+        tracing::debug!(
+        url = %url,
+        send_headers = ?headers,
+        ipc_headers = ?headers_raw,
+        "Fetching URL"
+        );
+      }
 
       request = request.headers(headers);
 
