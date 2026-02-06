@@ -43,13 +43,7 @@ dashmap = "6.1.0"
 tauri-plugin = { version = "2", features = ["build"] }
 
 [features]
-default = [
-  "rustls-tls",
-  "http2",
-  "charset",
-  "macos-system-configuration",
-  "cookies",
-]
+default = ["rustls-tls", "http2", "charset", "macos-system-configuration", "cookies"]
 multipart = ["reqwest/multipart"]
 json = ["reqwest/json"]
 stream = ["reqwest/stream"]

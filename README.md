@@ -58,9 +58,7 @@ Add the required permission to your capability file:
 
 ```jsonc
 // src-tauri/capabilities/default.json
-{
-  "permissions": ["cors-fetch:default"]
-}
+{ "permissions": ["cors-fetch:default"] }
 ```
 
 ## Usage
@@ -69,8 +67,8 @@ Once initialized, the plugin automatically hooks into the global `fetch`. No cha
 
 ```javascript
 // This request now bypasses CORS automatically
-const response = await fetch("https://api.openai.com");
-const data = await response.json();
+const response = await fetch('https://api.openai.com')
+const data = await response.json()
 ```
 
 ### Configuration
@@ -80,21 +78,16 @@ You can fine-tune the behavior via `cors.config()` or `window.CORSFetch.config()
 ```js
 cors.config({
   include: [/^https?:\/\//i], // Patterns to proxy (default: all)
-  exclude: ["https://api.openai.com/v1/chat/completions"],
+  exclude: ['https://api.openai.com/v1/chat/completions'],
   // Default request options for Tauri HTTP Client
   request: {
     connectTimeout: 30 * 1000, // ms
     maxRedirections: 5,
-    proxy: {
-      all: "http://127.0.0.1:7890",
-    },
-    danger: {
-      acceptInvalidCerts: false,
-      acceptInvalidHostnames: false,
-    },
-    userAgent: navigator.userAgent,
-  },
-});
+    proxy: { all: 'http://127.0.0.1:7890' },
+    danger: { acceptInvalidCerts: false, acceptInvalidHostnames: false },
+    userAgent: navigator.userAgent
+  }
+})
 ```
 
 ### Direct Access APIs

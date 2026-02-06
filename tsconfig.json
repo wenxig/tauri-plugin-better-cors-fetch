@@ -1,11 +1,6 @@
 {
   "compilerOptions": {
-    "lib": [
-      "ESNext",
-      "DOM",
-      "DOM.Iterable",
-      
-    ],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "emitDecoratorMetadata": true,
     "strict": true,
     "target": "ESNext",
@@ -27,7 +22,5 @@
     "isolatedModules": true,
     "noImplicitThis": true
   },
-  "include": [
-    "./src-web/**/*"
-  ],
+  "include": ["./src-web/**/*"]
 }

@@ -38,10 +38,10 @@ window.CORSFetch.config({
     maxRedirections: 5, // Default maximum redirections
     connectTimeout: 30 * 1000, // Default connection timeout (ms)
     proxy: {
-      all: "http://127.0.0.1:7890", // Default proxy for all requests
-    },
-  },
-});
+      all: 'http://127.0.0.1:7890' // Default proxy for all requests
+    }
+  }
+})
 ```
 
 Closes [#10](https://github.com/idootop/tauri-plugin-cors-fetch/issues/10). Thanks to [@kanoshiou](https://github.com/kanoshiou) for the contribution in PR [#11](https://github.com/idootop/tauri-plugin-cors-fetch/issues/11).
@@ -55,8 +55,8 @@ Closes [#10](https://github.com/idootop/tauri-plugin-cors-fetch/issues/10). Than
 ```javascript
 window.CORSFetch.config({
   include: [/^https?:\/\//i], // Process all HTTP requests (default)
-  exclude: ["https://api.openai.com/v1/chat/completions"], // Skip CORS bypass
-});
+  exclude: ['https://api.openai.com/v1/chat/completions'] // Skip CORS bypass
+})
 ```
 
 ### 💥 Breaking Changes
