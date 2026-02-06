@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 use http::{header, HeaderMap, HeaderName, HeaderValue, Method, StatusCode};
-use reqwest::{redirect::Policy, NoProxy};
+use reqwest::{redirect::Policy, Client, NoProxy};
 use serde::{Deserialize, Serialize};
 use std::{future::Future, pin::Pin, str::FromStr, sync::Arc, time::Duration};
 use tauri::{
@@ -77,12 +77,19 @@ pub struct DangerousSettings {
 #[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
 #[ts(export)]
-pub struct ClientConfig {
+pub struct ContentConfig {
   method: String,
   #[ts(type = "string")]
   url: url::Url,
   headers: Vec<(String, String)>,
   data: Option<Vec<u8>>,
+  client: ClientConfig,
+}
+
+#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct ClientConfig {
   connect_timeout: Option<u64>,
   max_redirections: Option<usize>,
   proxy: Option<Proxy>,
@@ -124,13 +131,61 @@ pub struct BasicAuth {
   password: String,
 }
 
+fn build_requester(state: &Http, config: &ClientConfig) -> Result<Client> {
+  let mut builder = reqwest::ClientBuilder::new();
+
+  if let Some(danger_config) = &config.danger {
+    builder = builder
+      .danger_accept_invalid_certs(danger_config.accept_invalid_certs)
+      .danger_accept_invalid_hostnames(danger_config.accept_invalid_hostnames)
+  }
+
+  if let Some(timeout) = config.connect_timeout {
+    builder = builder.connect_timeout(Duration::from_millis(timeout));
+  } else {
+    builder = builder.connect_timeout(Duration::from_millis(10000));
+  }
+
+  if let Some(max_redirections) = config.max_redirections {
+    builder = builder.redirect(if max_redirections == 0 {
+      Policy::none()
+    } else {
+      Policy::limited(max_redirections)
+    });
+  }
+
+  if let Some(proxy_config) = &config.proxy {
+    builder = attach_proxy(proxy_config, builder)?;
+  }
+
+  #[cfg(feature = "cookies")]
+  {
+    builder = builder.cookie_provider(state.cookies_jar.clone());
+  }
+  Ok(builder.build()?)
+}
+
+fn get_requester(state: &Http, config: &ClientConfig) -> Arc<Client> {
+  let key = {
+    let danger = config.danger.as_ref();
+    let proxy = config.proxy.as_ref();
+    format!("{:?}{:?}{:?}", danger, proxy, config.max_redirections)
+  };
+
+  let new_client = Arc::new(build_requester(state, config).unwrap());
+
+  let mut map = state.poll.lock().unwrap();
+  let entry = map.entry(key).or_insert_with(|| Arc::clone(&new_client));
+  Arc::clone(entry)
+}
+
 #[inline]
 fn proxy_creator(
-  url_or_config: UrlOrConfig,
+  url_or_config: &UrlOrConfig,
   proxy_fn: fn(String) -> reqwest::Result<reqwest::Proxy>,
 ) -> reqwest::Result<reqwest::Proxy> {
   match url_or_config {
-    UrlOrConfig::Url(url) => Ok(proxy_fn(url)?),
+    UrlOrConfig::Url(url) => Ok(proxy_fn(url.clone())?),
     UrlOrConfig::Config(ProxyConfig {
       url,
       basic_auth,
@@ -150,7 +205,7 @@ fn proxy_creator(
 }
 
 fn attach_proxy(
-  proxy: Proxy,
+  proxy: &Proxy,
   mut builder: reqwest::ClientBuilder,
 ) -> crate::Result<reqwest::ClientBuilder> {
   let Proxy { all, http, https } = proxy;
@@ -177,68 +232,46 @@ fn attach_proxy(
 pub async fn fetch<R: Runtime>(
   webview: Webview<R>,
   state: State<'_, Http>,
-  client_config: ClientConfig,
+  content_config: ContentConfig,
 ) -> crate::Result<ResourceId> {
   log::debug!(
     "Fetch config\n{}",
-    serde_json::to_string_pretty(&client_config).unwrap()
+    serde_json::to_string_pretty(&content_config).unwrap()
   );
 
-  let ClientConfig {
+  let ContentConfig {
+    client:
+      ClientConfig {
+        connect_timeout,
+        user_agent,
+        max_redirections: _,
+        proxy: _,
+        danger: _,
+      },
     method,
     url,
     headers: headers_raw,
     data,
-    connect_timeout,
-    max_redirections,
-    proxy,
-    danger,
-    user_agent,
-  } = client_config;
+  } = &content_config;
 
   let scheme = url.scheme();
   let method = Method::from_bytes(method.as_bytes())?;
 
   let mut headers = HeaderMap::new();
-  for (h, v) in &headers_raw {
+  for (h, v) in headers_raw {
     let name = HeaderName::from_str(&h)?;
     headers.append(name, HeaderValue::from_str(&v)?);
   }
 
   match scheme {
     "http" | "https" => {
-      let mut builder = reqwest::ClientBuilder::new();
+      let requester = get_requester(&state, &content_config.client);
 
-      if let Some(danger_config) = danger {
-        builder = builder
-          .danger_accept_invalid_certs(danger_config.accept_invalid_certs)
-          .danger_accept_invalid_hostnames(danger_config.accept_invalid_hostnames)
+      let mut request = requester.request(method.clone(), url.clone());
+
+      if let Some(tmo) = connect_timeout {
+        request = request.timeout(Duration::from_millis(tmo.clone()));
       }
-
-      if let Some(timeout) = connect_timeout {
-        builder = builder.connect_timeout(Duration::from_millis(timeout));
-      } else {
-        builder = builder.connect_timeout(Duration::from_millis(10000));
-      }
-
-      if let Some(max_redirections) = max_redirections {
-        builder = builder.redirect(if max_redirections == 0 {
-          Policy::none()
-        } else {
-          Policy::limited(max_redirections)
-        });
-      }
-
-      if let Some(proxy_config) = proxy {
-        builder = attach_proxy(proxy_config, builder)?;
-      }
-
-      #[cfg(feature = "cookies")]
-      {
-        builder = builder.cookie_provider(state.cookies_jar.clone());
-      }
-
-      let mut request = builder.build()?.request(method.clone(), url.clone());
 
       // POST and PUT requests should always have a 0 length content-length,
       // if there is no body. https://fetch.spec.whatwg.org/#http-network-or-cache-fetch
@@ -256,12 +289,12 @@ pub async fn fetch<R: Runtime>(
       if !headers.contains_key(header::USER_AGENT) && user_agent.is_some() {
         headers.append(
           header::USER_AGENT,
-          HeaderValue::from_str(user_agent.unwrap().as_str())?,
+          HeaderValue::from_str(user_agent.as_ref().unwrap().as_str())?,
         );
       }
 
       if let Some(data) = data {
-        request = request.body(data);
+        request = request.body(data.clone());
       }
 
       log::debug!(

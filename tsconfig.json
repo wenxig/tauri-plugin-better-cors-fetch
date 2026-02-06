@@ -28,6 +28,6 @@
     "noImplicitThis": true
   },
   "include": [
-    "./src-web/*"
+    "./src-web/**/*"
   ],
 }
