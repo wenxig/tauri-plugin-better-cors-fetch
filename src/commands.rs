@@ -74,11 +74,12 @@ pub async fn fetch<R: Runtime>(
   state: State<'_, Http>,
   content_config: ContentConfig,
 ) -> crate::Result<ResourceId> {
-  tracing::debug!(
-    "Fetch config\n{}",
-    serde_json::to_string_pretty(&content_config).unwrap()
-  );
-
+  if tracing::enabled!(Level::DEBUG) {
+    tracing::debug!(
+      "Fetch config\n{}",
+      serde_json::to_string_pretty(&content_config).unwrap()
+    );
+  }
   let ContentConfig {
     client:
       ClientConfig {
@@ -225,12 +226,12 @@ pub async fn fetch_send<R: Runtime>(
   let mut fut = req.fut.lock().await;
 
   let res = tokio::select! {
-      res = fut.as_mut() => res?,
-      _ = abort_rx.0 => {
-          let mut resources_table = webview.resources_table();
-          resources_table.close(rid)?;
-          return Err(Error::RequestCanceled);
-      }
+    res = fut.as_mut() => res?,
+    _ = abort_rx.0 => {
+      let mut resources_table = webview.resources_table();
+      resources_table.close(rid)?;
+      return Err(Error::RequestCanceled);
+    }
   };
 
   #[cfg(feature = "tracing")]

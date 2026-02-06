@@ -17,11 +17,14 @@ lightningcss
 minidump
 msvc
 nvim
+oneshot
 oxfmt
 oxlint
 pinia
 Popconfirm
 Popselect
+Recveiver
+redirections
 reloadable
 Reloadable
 reqwest
