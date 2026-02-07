@@ -133,11 +133,13 @@ pub async fn fetch<R: Runtime>(
 }
 
 #[command]
-pub fn fetch_cancel<R: Runtime>(webview: Webview<R>, rid: ResourceId) -> crate::Result<()> {
-  let resources_table = webview.resources_table();
-  let req = resources_table.get::<FetchRequest>(rid)?;
+pub async fn fetch_cancel<R: Runtime>(webview: Webview<R>, rid: ResourceId) -> crate::Result<()> {
+  let req = {
+    let resources_table = webview.resources_table();
+    resources_table.get::<FetchRequest>(rid)?
+  };
 
-  let mut abort_tx_guard = req.abort_tx.blocking_lock();
+  let mut abort_tx_guard = req.abort_tx.lock().await;
   if let Some(tx) = abort_tx_guard.take() {
     let _ = tx.send(());
   }
