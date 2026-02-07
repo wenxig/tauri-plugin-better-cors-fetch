@@ -3,10 +3,11 @@
 // SPDX-License-Identifier: MIT
 
 use crate::{
-  request::{get_requester, ClientConfig, ContentConfig},
+  headers::create_headers,
+  request::{get_requester, ContentConfig},
   Error, Http, Result,
 };
-use http::{header, HeaderMap, HeaderName, HeaderValue, Method, StatusCode};
+use http::{header, Method, StatusCode};
 use serde::Serialize;
 use std::{future::Future, pin::Pin, sync::Arc, time::Duration};
 use tauri::{
@@ -29,17 +30,6 @@ struct FetchRequest {
 }
 impl tauri::Resource for FetchRequest {}
 
-struct AbortSender(Sender<()>);
-impl tauri::Resource for AbortRecveiver {}
-
-impl AbortSender {
-  fn abort(self) {
-    let _ = self.0.send(());
-  }
-}
-
-struct AbortRecveiver(Receiver<()>);
-impl tauri::Resource for AbortSender {}
 
 trait AddRequest {
   fn add_request(&mut self, fut: CancelableResponseFuture) -> ResourceId;
@@ -80,85 +70,30 @@ pub async fn fetch<R: Runtime>(
       serde_json::to_string_pretty(&content_config).unwrap()
     );
   }
-  let ContentConfig {
-    client:
-      ClientConfig {
-        connect_timeout,
-        user_agent,
-        max_redirections: _,
-        proxy: _,
-        danger: _,
-      },
-    method,
-    url,
-    headers: headers_raw,
-    data,
-  } = &content_config;
 
-  let scheme = url.scheme();
-  let method = Method::from_bytes(method.as_bytes())?;
-
-  let mut headers = HeaderMap::with_capacity(headers_raw.len());
-
-  for (h, v) in headers_raw {
-    let name = HeaderName::from_bytes(h.as_bytes()).map_err(|e| {
-      tracing::warn!("Invalid header name from frontend: {}", h);
-      e
-    })?;
-    let value = HeaderValue::from_bytes(v.as_bytes()).map_err(|e| {
-      tracing::warn!("Invalid header value from frontend: {} = {}", h, v);
-      e
-    })?;
-
-    headers.append(name, value);
-  }
-
+  let scheme = content_config.url.scheme();
   match scheme {
     "http" | "https" => {
       let requester = get_requester(&state, &content_config.client);
 
-      let mut request = requester.request(method.clone(), url.clone());
+      let data = content_config.data;
 
-      if let Some(tmo) = connect_timeout {
-        request = request.timeout(Duration::from_millis(tmo.clone()));
+      let method = Method::from_bytes(content_config.method.as_bytes())?;
+      let mut request = requester.request(method.clone(), content_config.url);
+
+      if let Some(tmo) = content_config.client.connect_timeout {
+        request = request.timeout(Duration::from_millis(tmo));
       }
 
-      // POST and PUT requests should always have a 0 length content-length,
-      // if there is no body. https://fetch.spec.whatwg.org/#http-network-or-cache-fetch
-      if data.is_none() && matches!(method, Method::POST | Method::PUT) {
-        headers.append(header::CONTENT_LENGTH, HeaderValue::from_static("0"));
-      }
-
-      if headers.contains_key(header::RANGE) {
-        // https://fetch.spec.whatwg.org/#http-network-or-cache-fetch step 18
-        // If httpRequest's header list contains `Range`, then append (`Accept-Encoding`, `identity`)
-        headers.append(
-          header::ACCEPT_ENCODING,
-          HeaderValue::from_static("identity"),
-        );
-      }
-
-      // Set User Agent
-      if !headers.contains_key(header::USER_AGENT) {
-        if let Some(ua) = user_agent {
-          if let Ok(value) = HeaderValue::from_str(ua.as_str()) {
-            headers.append(header::USER_AGENT, value);
-          } else {
-            tracing::warn!("Invalid User-Agent: {}", ua);
-          }
-        }
-      }
+      let headers = create_headers(
+        &content_config.headers,
+        method,
+        content_config.client.user_agent,
+        &data,
+      )?;
 
       if let Some(data) = data {
         request = request.body(data.clone());
-      }
-      if tracing::enabled!(Level::DEBUG) {
-        tracing::debug!(
-        url = %url,
-        send_headers = ?headers,
-        ipc_headers = ?headers_raw,
-        "Fetching URL"
-        );
       }
 
       request = request.headers(headers);
@@ -174,7 +109,8 @@ pub async fn fetch<R: Runtime>(
       Ok(rid)
     }
     "data" => {
-      let data_url = data_url::DataUrl::process(url.as_str()).map_err(|_| Error::DataUrlError)?;
+      let data_url =
+        data_url::DataUrl::process(content_config.url.as_str()).map_err(|_| Error::DataUrlError)?;
       let (body, _) = data_url
         .decode_to_vec()
         .map_err(|_| Error::DataUrlDecodeError)?;
@@ -291,6 +227,19 @@ pub async fn fetch_read_body<R: Runtime>(
 
   Ok(tauri::ipc::Response::new(chunk))
 }
+
+
+struct AbortSender(Sender<()>);
+impl tauri::Resource for AbortRecveiver {}
+
+impl AbortSender {
+  fn abort(self) {
+    let _ = self.0.send(());
+  }
+}
+
+struct AbortRecveiver(Receiver<()>);
+impl tauri::Resource for AbortSender {}
 
 #[command]
 pub async fn fetch_cancel_body<R: Runtime>(

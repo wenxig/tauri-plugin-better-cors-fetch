@@ -22,6 +22,7 @@ mod commands;
 #[cfg(feature = "cookies")]
 mod cookies;
 mod error;
+mod headers;
 
 #[cfg(feature = "cookies")]
 const COOKIES_FILENAME: &str = ".cookies";
