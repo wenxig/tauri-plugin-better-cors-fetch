@@ -34,6 +34,8 @@ pub enum Error {
   Tauri(#[from] tauri::Error),
   #[error(transparent)]
   Utf8(#[from] std::string::FromUtf8Error),
+  #[error("Invalid header value: contains non-UTF-8 characters")]
+  InvalidHeaderValue,
 }
 
 impl Serialize for Error {

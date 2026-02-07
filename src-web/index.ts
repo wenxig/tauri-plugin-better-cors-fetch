@@ -35,6 +35,10 @@ export class CORSFetch {
     window.fetchCORS = (input, init) => this.fetchCORS(input, init, true)
   }
 
+  private _streamConfig = {
+    bufferSize: 5,
+    maxBufferBytes: 256 * 1024,
+  }
   private _config: CORSFetchConfig = {
     include: [],
     exclude: [],
@@ -51,12 +55,20 @@ export class CORSFetch {
     this._config = merge(this._config, newConfig)
   }
 
+  private combineChunks(chunks: Uint8Array[], totalSize: number): Uint8Array {
+    const combined = new Uint8Array(totalSize)
+    let offset = 0
+    for (const chunk of chunks) {
+      combined.set(chunk, offset)
+      offset += chunk.byteLength
+    }
+    return combined
+  }
+
   public async fetchCORS(input: Parameters<typeof fetch>[0], init?: CORSFetchInit, force = false) {
     const urlStr = input instanceof Request ? input.url : String(input)
-    console.debug(`[fetchCORS] begin -> ${urlStr}`)
 
     if (!force && !this.shouldUseCORSProxy(urlStr)) {
-      console.debug(`[fetchCORS] ${urlStr} browser`)
       return window.fetchNative(input, init)
     }
 
@@ -74,12 +86,12 @@ export class CORSFetch {
       signal?.removeEventListener('abort', onAbort)
 
       if (responseRid !== null) {
-        invoke('plugin:cors-fetch|fetch_cancel_body', { rid: responseRid }).catch(() => {})
+        invoke('plugin:cors-fetch|fetch_cancel_body', { rid: responseRid }).catch(() => { })
         responseRid = null
       }
 
       if (rid !== null) {
-        invoke('plugin:cors-fetch|fetch_cancel', { rid }).catch(() => {})
+        invoke('plugin:cors-fetch|fetch_cancel', { rid }).catch(() => { })
         rid = null
       }
     }
@@ -92,8 +104,6 @@ export class CORSFetch {
 
     if (signal?.aborted) throw this.cancel_error
 
-    if (!req.headers.has('Content-Type')) req.headers.set('Content-Type', 'application/json')
-
     try {
       const clientConfig: ContentConfig = {
         method: req.method,
@@ -102,16 +112,6 @@ export class CORSFetch {
         data: buffer.byteLength ? Array.from(new Uint8Array(buffer)) : null,
         client: this._config.request
       }
-
-      console.debug(
-        `[fetchCORS] ${urlStr}`,
-        'config:',
-        clientConfig,
-        'headers:',
-        req.headers,
-        'request:',
-        req
-      )
 
       rid = await invoke('plugin:cors-fetch|fetch', { clientConfig })
 
@@ -134,6 +134,9 @@ export class CORSFetch {
 
       if (signal?.aborted) throw this.cancel_error
 
+      const chunkBuffer: Uint8Array[] = []
+      let totalBufferedBytes = 0
+
       const readChunk = async (controller: ReadableStreamDefaultController) => {
         if (signal?.aborted) {
           controller.error(this.cancel_error)
@@ -141,21 +144,45 @@ export class CORSFetch {
         }
 
         try {
-          const data = await invoke<ArrayBuffer>('plugin:cors-fetch|fetch_read_body', {
-            rid: responseRid
-          })
-          const dataUint8 = new Uint8Array(data)
-          const lastByte = dataUint8[dataUint8.byteLength - 1]
-          const actualData = dataUint8.slice(0, dataUint8.byteLength - 1)
+          while (chunkBuffer.length < this._streamConfig.bufferSize &&
+            totalBufferedBytes < this._streamConfig.maxBufferBytes) {
 
-          // close when the signal to close (last byte is 1) is sent from the
-          // IPC.
-          if (lastByte === 1) {
-            controller.close()
-            return
+            const data = await invoke<ArrayBuffer>('plugin:cors-fetch|fetch_read_body', {
+              rid: responseRid
+            })
+            const dataUint8 = new Uint8Array(data)
+            const lastByte = dataUint8[dataUint8.byteLength - 1]
+            const actualData = dataUint8.slice(0, dataUint8.byteLength - 1)
+
+            if (lastByte === 1) {
+              if (chunkBuffer.length > 0) {
+                const combined = this.combineChunks(chunkBuffer, totalBufferedBytes)
+                controller.enqueue(combined)
+              }
+              controller.close()
+              return
+            }
+
+            if (actualData.byteLength > 0) {
+              chunkBuffer.push(actualData)
+              totalBufferedBytes += actualData.byteLength
+            }
+
+            if (signal?.aborted) {
+              controller.error(this.cancel_error)
+              return
+            }
           }
 
-          controller.enqueue(actualData)
+          // 推送缓冲的数据
+          if (chunkBuffer.length > 0) {
+            const combined = this.combineChunks(chunkBuffer, totalBufferedBytes)
+            controller.enqueue(combined)
+
+            // 清空缓冲区
+            chunkBuffer.length = 0
+            totalBufferedBytes = 0
+          }
         } catch (e) {
           controller.error(e)
           cleanup()

@@ -25,11 +25,10 @@ type CancelableResponseFuture =
 
 struct FetchRequest {
   fut: Mutex<CancelableResponseFuture>,
-  abort_tx_rid: ResourceId,
-  abort_rx_rid: ResourceId,
+  abort_tx: Mutex<Option<Sender<()>>>,
+  abort_rx: Mutex<Option<Receiver<()>>>,
 }
 impl tauri::Resource for FetchRequest {}
-
 
 trait AddRequest {
   fn add_request(&mut self, fut: CancelableResponseFuture) -> ResourceId;
@@ -38,12 +37,13 @@ trait AddRequest {
 impl AddRequest for ResourceTable {
   fn add_request(&mut self, fut: CancelableResponseFuture) -> ResourceId {
     let (tx, rx) = channel::<()>();
-    let (tx, rx) = (AbortSender(tx), AbortRecveiver(rx));
+
     let req = FetchRequest {
       fut: Mutex::new(fut),
-      abort_tx_rid: self.add(tx),
-      abort_rx_rid: self.add(rx),
+      abort_tx: Mutex::new(Some(tx)), // ✅ 直接存储
+      abort_rx: Mutex::new(Some(rx)), // ✅ 直接存储
     };
+
     self.add(req)
   }
 }
@@ -134,12 +134,14 @@ pub async fn fetch<R: Runtime>(
 
 #[command]
 pub fn fetch_cancel<R: Runtime>(webview: Webview<R>, rid: ResourceId) -> crate::Result<()> {
-  let mut resources_table = webview.resources_table();
+  let resources_table = webview.resources_table();
   let req = resources_table.get::<FetchRequest>(rid)?;
-  let abort_tx = resources_table.take::<AbortSender>(req.abort_tx_rid)?;
-  if let Some(abort_tx) = Arc::into_inner(abort_tx) {
-    abort_tx.abort();
+
+  let mut abort_tx_guard = req.abort_tx.blocking_lock();
+  if let Some(tx) = abort_tx_guard.take() {
+    let _ = tx.send(());
   }
+
   Ok(())
 }
 
@@ -148,22 +150,21 @@ pub async fn fetch_send<R: Runtime>(
   webview: Webview<R>,
   rid: ResourceId,
 ) -> crate::Result<FetchResponse> {
-  let (req, abort_rx) = {
-    let mut resources_table = webview.resources_table();
-    let req = resources_table.get::<FetchRequest>(rid)?;
-    let abort_rx = resources_table.take::<AbortRecveiver>(req.abort_rx_rid)?;
-    (req, abort_rx)
+  let req = {
+    let resources_table = webview.resources_table();
+    resources_table.get::<FetchRequest>(rid)?
   };
 
-  let Some(abort_rx) = Arc::into_inner(abort_rx) else {
-    return Err(Error::RequestCanceled);
+  let abort_rx = {
+    let mut rx_guard = req.abort_rx.lock().await;
+    rx_guard.take().ok_or(Error::RequestCanceled)?
   };
 
   let mut fut = req.fut.lock().await;
 
   let res = tokio::select! {
     res = fut.as_mut() => res?,
-    _ = abort_rx.0 => {
+    _ = abort_rx => {
       let mut resources_table = webview.resources_table();
       resources_table.close(rid)?;
       return Err(Error::RequestCanceled);
@@ -175,12 +176,16 @@ pub async fn fetch_send<R: Runtime>(
 
   let status = res.status();
   let url = res.url().to_string();
-  let mut headers = Vec::new();
+  // 预分配容量,避免 Vec 在增长时重新分配内存
+  let mut headers = Vec::with_capacity(res.headers().len());
   for (key, val) in res.headers().iter() {
-    headers.push((
-      key.as_str().into(),
-      String::from_utf8(val.as_bytes().to_vec())?,
-    ));
+    // 使用 to_str() 直接转换,避免创建中间的 Vec<u8>
+    let value_str = val
+      .to_str()
+      .map_err(|_| Error::InvalidHeaderValue)?
+      .to_string();
+
+    headers.push((key.as_str().to_string(), value_str));
   }
 
   let mut resources_table = webview.resources_table();
@@ -227,19 +232,6 @@ pub async fn fetch_read_body<R: Runtime>(
 
   Ok(tauri::ipc::Response::new(chunk))
 }
-
-
-struct AbortSender(Sender<()>);
-impl tauri::Resource for AbortRecveiver {}
-
-impl AbortSender {
-  fn abort(self) {
-    let _ = self.0.send(());
-  }
-}
-
-struct AbortRecveiver(Receiver<()>);
-impl tauri::Resource for AbortSender {}
 
 #[command]
 pub async fn fetch_cancel_body<R: Runtime>(
