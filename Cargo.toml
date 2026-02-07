@@ -24,45 +24,59 @@ android = { level = "full", notes = "" }
 ios = { level = "full", notes = "" }
 
 [dependencies]
-tauri = { version = "2", default-features = false }
+tauri = { version = "2.10.2", default-features = false }
 serde = "1"
 serde_json = "1"
 thiserror = "2"
-url = "2"
-http = "1"
-reqwest = { version = "0.12", default-features = false }
+url = "2.5.8"
+http = "1.4.0"
+reqwest = { version = "0.13.2", default-features = false }
 tokio = { version = "1", features = ["sync", "macros"] }
 data-url = "0.3"
-cookie_store = { version = "0.22", features = ["serde"] }
-bytes = { version = "1" }
-tracing = { version = "0.1" }
+cookie_store = { version = "0.22", optional = true, features = ["serde"] }
+bytes = { version = "1.11.1", optional = true }
+tracing = { version = "0.1", optional = true }
 ts-rs = "12.0.1"
 dashmap = "6.1.0"
 
 [build-dependencies]
-tauri-plugin = { version = "2", features = ["build"] }
+tauri-plugin = { version = "2.5.3", features = ["build"] }
 
 [features]
-default = ["rustls-tls", "http2", "charset", "macos-system-configuration", "cookies"]
-multipart = ["reqwest/multipart"]
-json = ["reqwest/json"]
-stream = ["reqwest/stream"]
+default = [
+  "reqwest/default",
+  "cookies",
+  "charset",
+  "stream",
+  "http2",
+  "json",
+  "system-proxy",
+  "socks",
+  "tracing",
+]
+tracing = ["dep:tracing"]
+
+# Proxy for reqwest's core network features
+http2 = ["reqwest/http2"]
+rustls = ["reqwest/rustls"]
+rustls-no-provider = ["reqwest/rustls-no-provider"]
 native-tls = ["reqwest/native-tls"]
+native-tls-no-alpn = ["reqwest/native-tls-no-alpn"]
 native-tls-vendored = ["reqwest/native-tls-vendored"]
-native-tls-alpn = ["reqwest/native-tls-alpn"]
-rustls-tls = ["reqwest/rustls-tls"]
-rustls-tls-manual-roots = ["reqwest/rustls-tls-manual-roots"]
-rustls-tls-webpki-roots = ["reqwest/rustls-tls-webpki-roots"]
-rustls-tls-native-roots = ["reqwest/rustls-tls-native-roots"]
+native-tls-vendored-no-alpn = ["reqwest/native-tls-vendored-no-alpn"]
 blocking = ["reqwest/blocking"]
-cookies = ["reqwest/cookies"]
+charset = ["reqwest/charset"]
+cookies = ["reqwest/cookies", "dep:cookie_store", "dep:bytes"]
 gzip = ["reqwest/gzip"]
 brotli = ["reqwest/brotli"]
-deflate = ["reqwest/deflate"]
 zstd = ["reqwest/zstd"]
-trust-dns = ["reqwest/trust-dns"]
+deflate = ["reqwest/deflate"]
+query = ["reqwest/query"]
+form = ["reqwest/form"]
+json = ["reqwest/json"]
+multipart = ["reqwest/multipart"]
+hickory-dns = ["reqwest/hickory-dns"]
+stream = ["reqwest/stream"]
 socks = ["reqwest/socks"]
-http2 = ["reqwest/http2"]
-charset = ["reqwest/charset"]
-macos-system-configuration = ["reqwest/macos-system-configuration"]
-tracing = []
+system-proxy = ["reqwest/system-proxy"]
+http3 = ["reqwest/http3"]
