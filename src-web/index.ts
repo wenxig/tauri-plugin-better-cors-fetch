@@ -105,7 +105,7 @@ export class CORSFetch {
     if (signal?.aborted) throw this.cancel_error
 
     try {
-      const clientConfig: ContentConfig = {
+      const contentConfig: ContentConfig = {
         method: req.method,
         url: urlStr,
         headers: Array.from(req.headers.entries()),
@@ -113,7 +113,7 @@ export class CORSFetch {
         client: this._config.request
       }
 
-      rid = await invoke('plugin:cors-fetch|fetch', { clientConfig })
+      rid = await invoke('plugin:cors-fetch|fetch', { contentConfig })
 
       if (signal?.aborted) throw this.cancel_error
 

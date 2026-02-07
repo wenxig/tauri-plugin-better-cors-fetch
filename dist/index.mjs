@@ -261,7 +261,7 @@ var CORSFetch = class CORSFetch {
 		const buffer = await req.arrayBuffer();
 		if (signal?.aborted) throw this.cancel_error;
 		try {
-			rid = await invoke("plugin:cors-fetch|fetch", { clientConfig: {
+			rid = await invoke("plugin:cors-fetch|fetch", { contentConfig: {
 				method: req.method,
 				url: urlStr,
 				headers: Array.from(req.headers.entries()),
