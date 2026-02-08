@@ -59,6 +59,15 @@ pub struct FetchResponse {
 }
 
 #[command]
+pub fn prepare_requester<R: Runtime>(
+  _: Webview<R>,
+  state: State<'_, Http>,
+  config: ContentConfig,
+) {
+  let _ = get_requester(&state, &config.client);
+}
+
+#[command]
 pub async fn fetch<R: Runtime>(
   webview: Webview<R>,
   state: State<'_, Http>,
@@ -178,10 +187,8 @@ pub async fn fetch_send<R: Runtime>(
 
   let status = res.status();
   let url = res.url().to_string();
-  // 预分配容量,避免 Vec 在增长时重新分配内存
   let mut headers = Vec::with_capacity(res.headers().len());
   for (key, val) in res.headers().iter() {
-    // 使用 to_str() 直接转换,避免创建中间的 Vec<u8>
     let value_str = val
       .to_str()
       .map_err(|_| Error::InvalidHeaderValue)?

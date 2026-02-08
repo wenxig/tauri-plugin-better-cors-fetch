@@ -41,8 +41,8 @@ declare global {
   interface Window {
     CORSFetch?: CORSFetch;
     fetchNative: typeof fetch;
-    fetchCORS: (input: Parameters<typeof fetch>[0], init: CORSFetchInit) => ReturnType<CORSFetch['fetchCORS']>;
-    fetch: CORSFetch['fetchCORS'];
+    fetchCORS: (input: Parameters<typeof fetch>[0], init: CORSFetchInit) => ReturnType<CORSFetch['fetch']>;
+    fetch: CORSFetch['fetch'];
   }
 }
 interface CORSFetchConfig {
@@ -50,15 +50,17 @@ interface CORSFetchConfig {
   exclude: (string | RegExp)[];
   request: ClientConfig;
 }
+type DeepPartial<T> = { [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P] };
 type CORSFetchInit = RequestInit & Partial<CORSFetchConfig['request']>;
 declare class CORSFetch {
-  static init(): CORSFetch;
-  protected constructor();
+  static init(config?: DeepPartial<CORSFetchConfig>, inject?: boolean): CORSFetch;
+  protected constructor(inject?: boolean, config?: DeepPartial<CORSFetchConfig>);
   private _streamConfig;
   private _config;
-  config(newConfig: Partial<CORSFetchConfig>): void;
+  config(newConfig: DeepPartial<CORSFetchConfig>): Promise<void>;
   private combineChunks;
-  fetchCORS(input: Parameters<typeof fetch>[0], init?: CORSFetchInit, force?: boolean): Promise<Response>;
+  fetch(input: Parameters<typeof fetch>[0], init?: CORSFetchInit, force?: boolean): Promise<Response>;
+  private readStream;
   private cancel_error;
   private matchesPattern;
   private shouldUseCORSProxy;

@@ -198,14 +198,20 @@ function isString(value) {
 //#endregion
 //#region src-web/index.ts
 var CORSFetch = class CORSFetch {
-	static init() {
-		if (!window.CORSFetch) window.CORSFetch = new CORSFetch();
-		return window.CORSFetch;
+	static init(config, inject = true) {
+		if (inject) {
+			if (!window.CORSFetch) window.CORSFetch = new CORSFetch(inject, config);
+			return window.CORSFetch;
+		}
+		return new CORSFetch(false, config);
 	}
-	constructor() {
-		window.fetchNative = window.fetch.bind(window);
-		window.fetch = this.fetchCORS.bind(this);
-		window.fetchCORS = (input, init) => this.fetchCORS(input, init, true);
+	constructor(inject = true, config) {
+		if (inject) {
+			window.fetchNative = window.fetch.bind(window);
+			window.fetch = this.fetch.bind(this);
+			window.fetchCORS = (input, init) => this.fetch(input, init, true);
+		}
+		this.config(config ?? {});
 	}
 	_streamConfig = {
 		bufferSize: 5,
@@ -227,6 +233,7 @@ var CORSFetch = class CORSFetch {
 	};
 	config(newConfig) {
 		this._config = merge(this._config, newConfig);
+		return invoke("plugin:cors-fetch|prepare_requester", { config: this._config }).catch(() => {});
 	}
 	combineChunks(chunks, totalSize) {
 		const combined = new Uint8Array(totalSize);
@@ -237,7 +244,7 @@ var CORSFetch = class CORSFetch {
 		}
 		return combined;
 	}
-	async fetchCORS(input, init, force = false) {
+	async fetch(input, init, force = false) {
 		const urlStr = input instanceof Request ? input.url : String(input);
 		if (!force && !this.shouldUseCORSProxy(urlStr)) return window.fetchNative(input, init);
 		const signal = isString(input) ? init?.signal : input instanceof URL ? init?.signal : init?.signal ?? input.signal;
@@ -274,45 +281,6 @@ var CORSFetch = class CORSFetch {
 			if (signal?.aborted) throw this.cancel_error;
 			const chunkBuffer = [];
 			let totalBufferedBytes = 0;
-			const readChunk = async (controller) => {
-				if (signal?.aborted) {
-					controller.error(this.cancel_error);
-					return;
-				}
-				try {
-					while (chunkBuffer.length < this._streamConfig.bufferSize && totalBufferedBytes < this._streamConfig.maxBufferBytes) {
-						const data = await invoke("plugin:cors-fetch|fetch_read_body", { rid: responseRid });
-						const dataUint8 = new Uint8Array(data);
-						const lastByte = dataUint8[dataUint8.byteLength - 1];
-						const actualData = dataUint8.slice(0, dataUint8.byteLength - 1);
-						if (lastByte === 1) {
-							if (chunkBuffer.length > 0) {
-								const combined = this.combineChunks(chunkBuffer, totalBufferedBytes);
-								controller.enqueue(combined);
-							}
-							controller.close();
-							return;
-						}
-						if (actualData.byteLength > 0) {
-							chunkBuffer.push(actualData);
-							totalBufferedBytes += actualData.byteLength;
-						}
-						if (signal?.aborted) {
-							controller.error(this.cancel_error);
-							return;
-						}
-					}
-					if (chunkBuffer.length > 0) {
-						const combined = this.combineChunks(chunkBuffer, totalBufferedBytes);
-						controller.enqueue(combined);
-						chunkBuffer.length = 0;
-						totalBufferedBytes = 0;
-					}
-				} catch (e) {
-					controller.error(e);
-					cleanup();
-				}
-			};
 			const body = [
 				101,
 				103,
@@ -320,7 +288,13 @@ var CORSFetch = class CORSFetch {
 				205,
 				304
 			].includes(status) ? null : new ReadableStream({
-				pull: readChunk,
+				pull: (c) => this.readStream({
+					chunkBuffer,
+					cleanup,
+					totalBufferedBytes,
+					responseRid,
+					signal
+				}, c),
 				cancel: onAbort
 			});
 			const res = new Response(body, {
@@ -333,6 +307,45 @@ var CORSFetch = class CORSFetch {
 		} catch (err) {
 			cleanup();
 			throw err;
+		}
+	}
+	async readStream({ signal, chunkBuffer, totalBufferedBytes, responseRid, cleanup }, controller) {
+		if (signal?.aborted) {
+			controller.error(this.cancel_error);
+			return;
+		}
+		try {
+			while (chunkBuffer.length < this._streamConfig.bufferSize && totalBufferedBytes < this._streamConfig.maxBufferBytes) {
+				const data = await invoke("plugin:cors-fetch|fetch_read_body", { rid: responseRid });
+				const dataUint8 = new Uint8Array(data);
+				const lastByte = dataUint8[dataUint8.byteLength - 1];
+				const actualData = dataUint8.slice(0, dataUint8.byteLength - 1);
+				if (lastByte === 1) {
+					if (chunkBuffer.length > 0) {
+						const combined = this.combineChunks(chunkBuffer, totalBufferedBytes);
+						controller.enqueue(combined);
+					}
+					controller.close();
+					return;
+				}
+				if (actualData.byteLength > 0) {
+					chunkBuffer.push(actualData);
+					totalBufferedBytes += actualData.byteLength;
+				}
+				if (signal?.aborted) {
+					controller.error(this.cancel_error);
+					return;
+				}
+			}
+			if (chunkBuffer.length > 0) {
+				const combined = this.combineChunks(chunkBuffer, totalBufferedBytes);
+				controller.enqueue(combined);
+				chunkBuffer.length = 0;
+				totalBufferedBytes = 0;
+			}
+		} catch (e) {
+			controller.error(e);
+			cleanup();
 		}
 	}
 	cancel_error = "User cancelled the request";
