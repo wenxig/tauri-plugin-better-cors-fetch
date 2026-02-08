@@ -1,5 +1,22 @@
 # Changelog
 
+## v6.0.1
+
+### Improvements
+
+- **Better Performance** Optimized code structure.
+- **Frontend Type** Typescript instead of javascript.
+
+## 💥 Breaking Changes
+
+- **Initialization Method Changed**
+
+```ts
+// src/app.ts
+import { CORSFetch } from 'tauri-plugin-better-cors-fetch'
+const cors = CORSFetch.init()
+```
+
 ## v5.0.0
 
 ### 🚀 Features & Improvements

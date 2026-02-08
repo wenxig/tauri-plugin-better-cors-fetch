@@ -1,10 +1,10 @@
 [package]
 name = "tauri-plugin-better-cors-fetch"
-version = "6.0.0"
+version = "6.0.1"
 description = "Enabling Cross-Origin Resource Sharing (CORS) for Fetch Requests within Tauri applications."
 keywords = ["tauri-plugin", "CORS", "fetch", "unofficial"]
 authors = ["Del Wang <hello@xbox.work>"]
-repository = "https://github.com/idootop/tauri-plugin-cors-fetch"
+repository = "https://github.com/delta-comic/tauri-plugin-better-cors-fetch"
 documentation = "https://docs.rs/crate/tauri-plugin-cors-fetch"
 license = "MIT"
 readme = "README.md"
@@ -53,6 +53,7 @@ default = [
   "system-proxy",
   "socks",
   "tracing",
+  
 ]
 tracing = ["dep:tracing"]
 

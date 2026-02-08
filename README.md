@@ -1,6 +1,6 @@
 ![tauri-plugin-cors-fetch](./banner.png)
 
-[![MIT licensed](https://img.shields.io/github/license/delta-comic/tauri-plugin-cors-fetch-no-aws)](./LICENSE)
+[![MIT licensed](https://img.shields.io/github/license/delta-comic/tauri-plugin-better-cors-fetch)](./LICENSE)
 
 An **unofficial** Tauri plugin that enables **seamless cross-origin (CORS) requests** by transparently proxying the native `fetch` API through Tauri's HTTP client.
 
@@ -8,7 +8,7 @@ An **unofficial** Tauri plugin that enables **seamless cross-origin (CORS) reque
 
 ## Features
 
-- **Zero Code Change**: Use standard `fetch()` as you normally would.
+- **Low Code Change**: Use standard `fetch()` as you normally would.
 - **Streaming & SSE**: Full support for Response Streaming and Server-Sent Events (SSE).
 - **Configurable**: Granular control over which domains bypass CORS.
 - **Multi-platform**: Supports _Windows, macOS, Linux, iOS, and Android_.
@@ -20,14 +20,14 @@ An **unofficial** Tauri plugin that enables **seamless cross-origin (CORS) reque
 Install the plugin by your package manager:
 
 ```sh
-pnpm i https://github.com/delta-comic/tauri-plugin-cors-fetch-no-aws
+pnpm i https://github.com/delta-comic/tauri-plugin-better-cors-fetch
 ```
 
 Add the plugin to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-tauri-plugin-cors-fetch = { git = "https://github.com/delta-comic/tauri-plugin-cors-fetch-no-aws", branch = "main", features = [
+tauri-plugin-cors-fetch = { git = "https://github.com/delta-comic/tauri-plugin-better-cors-fetch", branch = "main", features = [
   "rustls-tls"
 ] }
 ```
@@ -38,7 +38,7 @@ Register the plugin in your Tauri setup:
 
 ```js
 // src/app.ts
-import { CORSFetch } from 'tauri-plugin-cors-fetch-no-aws'
+import { CORSFetch } from 'tauri-plugin-better-cors-fetch'
 const cors = CORSFetch.init()
 ```
 
