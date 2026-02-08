@@ -1,5 +1,11 @@
 # Changelog
 
+## v6.1.0
+
+### Improvements
+
+- **Initialization Fast** Now, Requester will auto generate on `CORSFetch.init` called.
+
 ## v6.0.1
 
 ### Improvements

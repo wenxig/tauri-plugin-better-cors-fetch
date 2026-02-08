@@ -36,10 +36,10 @@ tauri-plugin-cors-fetch = { git = "https://github.com/delta-comic/tauri-plugin-b
 
 Register the plugin in your Tauri setup:
 
-```js
+```ts
 // src/app.ts
 import { CORSFetch } from 'tauri-plugin-better-cors-fetch'
-const cors = CORSFetch.init()
+CORSFetch.init()
 ```
 
 ```rust
@@ -65,18 +65,25 @@ Add the required permission to your capability file:
 
 Once initialized, the plugin automatically hooks into the global `fetch`. No changes to your frontend code are required:
 
-```javascript
+```ts
 // This request now bypasses CORS automatically
 const response = await fetch('https://api.openai.com')
 const data = await response.json()
 ```
 
+If you don't want to automatically inject to global, you can do:
+
+```ts
+CORSFetch.init({}, false)
+//                 ^^^^^ it will disabled injection.
+```
+
 ### Configuration
 
-You can fine-tune the behavior via `cors.config()` or `window.CORSFetch.config()`:
+You can fine-tune the behavior via `cors.config({ config })` or `CORSFetch.init({ config })`:
 
-```js
-cors.config({
+```ts
+CORSFetch.init({
   include: [/^https?:\/\//i], // Patterns to proxy (default: all)
   exclude: ['https://api.openai.com/v1/chat/completions'],
   // Default request options for Tauri HTTP Client
