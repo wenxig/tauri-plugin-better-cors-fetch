@@ -3,9 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 use crate::{
-  headers::create_headers,
-  request::{get_requester, ContentConfig},
-  Error, Http, Result,
+  Error, Http, Result, headers::create_headers, request::{self, ContentConfig, get_requester}
 };
 use http::{header, Method, StatusCode};
 use serde::Serialize;
@@ -64,7 +62,7 @@ pub fn prepare_requester<R: Runtime>(
   state: State<'_, Http>,
   config: ContentConfig,
 ) {
-  let _ = get_requester(&state, &config.client);
+  request::prepare_requester(&state, &config.client);
 }
 
 #[command]

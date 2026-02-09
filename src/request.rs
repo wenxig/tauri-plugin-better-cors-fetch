@@ -163,6 +163,19 @@ pub fn get_requester(state: &Http, config: &ClientConfig) -> Arc<Client> {
     .clone()
 }
 
+pub fn prepare_requester(state: &Http, config: &ClientConfig) -> () {
+  let cache_key = ClientCacheKey::from_config(config);
+  if !state.pool.contains_key(&cache_key)  {
+    let requester = build_requester(state, config);
+    match requester {
+      Ok(requester) => {
+        state.pool.insert(cache_key, Arc::new(requester));
+      }
+      Err(_) => (),
+    }
+  }
+}
+
 #[inline]
 fn proxy_creator(
   url_or_config: &UrlOrConfig,
