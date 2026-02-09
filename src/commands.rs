@@ -38,8 +38,8 @@ impl AddRequest for ResourceTable {
 
     let req = FetchRequest {
       fut: Mutex::new(fut),
-      abort_tx: Mutex::new(Some(tx)), // ✅ 直接存储
-      abort_rx: Mutex::new(Some(rx)), // ✅ 直接存储
+      abort_tx: Mutex::new(Some(tx)),
+      abort_rx: Mutex::new(Some(rx)),
     };
 
     self.add(req)
