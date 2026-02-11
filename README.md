@@ -27,9 +27,7 @@ Add the plugin to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-tauri-plugin-cors-fetch = { git = "https://github.com/delta-comic/tauri-plugin-better-cors-fetch", branch = "main", features = [
-  "rustls-tls"
-] }
+tauri-plugin-better-cors-fetch = { git = "https://github.com/delta-comic/tauri-plugin-better-cors-fetch", branch = "main" }
 ```
 
 ### 2. Initialize Plugin
@@ -46,7 +44,7 @@ CORSFetch.init()
 // src-tauri/src/lib.rs
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_cors_fetch::init()) // 👈 here
+        .plugin(tauri_plugin_better_cors_fetch::init()) // 👈 here
         .run(tauri::generate_context!())
         .expect("failed to run app");
 }
