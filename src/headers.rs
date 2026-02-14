@@ -2,6 +2,7 @@ use http::{header, HeaderMap, HeaderName, HeaderValue, Method};
 
 use crate::Result;
 
+#[inline]
 pub fn create_headers(
   raw_headers: &Vec<(String, String)>,
   method: Method,

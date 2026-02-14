@@ -109,6 +109,7 @@ impl CookieStoreMutex {
 }
 
 impl reqwest::cookie::CookieStore for CookieStoreMutex {
+  #[inline]
   fn set_cookies(&self, cookie_headers: &mut dyn Iterator<Item = &HeaderValue>, url: &url::Url) {
     set_cookies(&mut self.store.lock().unwrap(), cookie_headers, url);
 
@@ -119,6 +120,7 @@ impl reqwest::cookie::CookieStore for CookieStoreMutex {
     }
   }
 
+  #[inline]
   fn cookies(&self, url: &url::Url) -> Option<HeaderValue> {
     let store = self.store.lock().unwrap();
     cookies(&store, url)

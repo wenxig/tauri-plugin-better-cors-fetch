@@ -151,6 +151,7 @@ fn build_requester(state: &Http, config: &ClientConfig) -> Result<Client> {
   Ok(builder.build()?)
 }
 
+#[inline]
 pub fn get_requester(state: &Http, config: &ClientConfig) -> Arc<Client> {
   let cache_key = ClientCacheKey::from_config(config);
 
@@ -163,6 +164,7 @@ pub fn get_requester(state: &Http, config: &ClientConfig) -> Arc<Client> {
     .clone()
 }
 
+#[inline]
 pub fn prepare_requester(state: &Http, config: &ClientConfig) -> () {
   let cache_key = ClientCacheKey::from_config(config);
   if !state.pool.contains_key(&cache_key)  {
@@ -201,6 +203,7 @@ fn proxy_creator(
   }
 }
 
+#[inline]
 fn attach_proxy(
   proxy: &Proxy,
   mut builder: reqwest::ClientBuilder,
