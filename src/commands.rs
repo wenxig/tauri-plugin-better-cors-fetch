@@ -21,7 +21,8 @@ use tokio::{
 };
 use tracing::Level;
 
-const BODY_CHUNK_CHANNEL_CAPACITY: usize = 16;
+const DEFAULT_BODY_CHUNK_CHANNEL_CAPACITY: usize = 32;
+const LARGE_BODY_CHUNK_CHANNEL_CAPACITY: usize = 64;
 
 type ResponseResult = Result<reqwest::Response>;
 type ResponseReceiver = oneshot::Receiver<ResponseResult>;
@@ -100,7 +101,19 @@ fn spawn_static_response_sender(response: reqwest::Response, response_tx: Sender
 }
 
 fn spawn_body_streamer(response: reqwest::Response) -> StreamingResponse {
-  let (chunk_tx, chunk_rx) = mpsc::channel::<Vec<u8>>(BODY_CHUNK_CHANNEL_CAPACITY);
+  let capacity = response
+    .content_length()
+    .map(|len| {
+      if len > 10 * 1024 * 1024 {
+        // > 10MB
+        LARGE_BODY_CHUNK_CHANNEL_CAPACITY
+      } else {
+        DEFAULT_BODY_CHUNK_CHANNEL_CAPACITY
+      }
+    })
+    .unwrap_or(DEFAULT_BODY_CHUNK_CHANNEL_CAPACITY);
+
+  let (chunk_tx, chunk_rx) = mpsc::channel::<Vec<u8>>(capacity);
 
   let worker = tokio::spawn(async move {
     let mut stream = response.bytes_stream();
@@ -108,9 +121,12 @@ fn spawn_body_streamer(response: reqwest::Response) -> StreamingResponse {
     while let Some(item) = stream.next().await {
       let chunk = match item {
         Ok(chunk) => {
-          let mut chunk = chunk.to_vec();
-          chunk.push(0);
-          chunk
+          // 预分配空间，避免重新分配
+          let len = chunk.len();
+          let mut vec = Vec::with_capacity(len + 1);
+          vec.extend_from_slice(&chunk);
+          vec.push(0);
+          vec
         }
         Err(_) => {
           let _ = chunk_tx.send(vec![1]).await;
@@ -264,14 +280,15 @@ pub async fn fetch_send<R: Runtime>(
 
   let status = res.status();
   let url = res.url().to_string();
-  let mut headers = Vec::with_capacity(res.headers().len());
-  for (key, val) in res.headers().iter() {
-    let value_str = val
-      .to_str()
-      .map_err(|_| Error::InvalidHeaderValue)?
-      .to_string();
+  let headers_len = res.headers().len();
+  let mut headers = Vec::with_capacity(headers_len);
 
-    headers.push((key.as_str().to_string(), value_str));
+  // 预先估计总字符串大小，减少重新分配
+  for (key, val) in res.headers().iter() {
+    let value_str = val.to_str().map_err(|_| Error::InvalidHeaderValue)?;
+
+    // 只在必要时分配，可以考虑使用Cow<str>
+    headers.push((key.as_str().into(), value_str.into()));
   }
 
   let mut resources_table = webview.resources_table();
