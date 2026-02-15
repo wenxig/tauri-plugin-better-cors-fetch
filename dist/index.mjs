@@ -280,7 +280,7 @@ var CORSFetch = class CORSFetch {
 			responseRid = _rid;
 			if (signal?.aborted) throw this.cancel_error;
 			const chunkBuffer = [];
-			let totalBufferedBytes = 0;
+			const totalBufferedBytes = { value: 0 };
 			const body = [
 				101,
 				103,
@@ -309,43 +309,43 @@ var CORSFetch = class CORSFetch {
 			throw err;
 		}
 	}
-	async readStream({ signal, chunkBuffer, totalBufferedBytes, responseRid, cleanup }, controller) {
-		if (signal?.aborted) {
+	async readStream(context, controller) {
+		if (context.signal?.aborted) {
 			controller.error(this.cancel_error);
 			return;
 		}
 		try {
-			while (chunkBuffer.length < this._streamConfig.bufferSize && totalBufferedBytes < this._streamConfig.maxBufferBytes) {
-				const data = await invoke("plugin:cors-fetch|fetch_read_body", { rid: responseRid });
+			while (context.chunkBuffer.length < this._streamConfig.bufferSize && context.totalBufferedBytes.value < this._streamConfig.maxBufferBytes) {
+				const data = await invoke("plugin:cors-fetch|fetch_read_body", { rid: context.responseRid });
 				const dataUint8 = new Uint8Array(data);
 				const lastByte = dataUint8[dataUint8.byteLength - 1];
 				const actualData = dataUint8.slice(0, dataUint8.byteLength - 1);
 				if (lastByte === 1) {
-					if (chunkBuffer.length > 0) {
-						const combined = this.combineChunks(chunkBuffer, totalBufferedBytes);
+					if (context.chunkBuffer.length > 0) {
+						const combined = this.combineChunks(context.chunkBuffer, context.totalBufferedBytes.value);
 						controller.enqueue(combined);
 					}
 					controller.close();
 					return;
 				}
 				if (actualData.byteLength > 0) {
-					chunkBuffer.push(actualData);
-					totalBufferedBytes += actualData.byteLength;
+					context.chunkBuffer.push(actualData);
+					context.totalBufferedBytes.value += actualData.byteLength;
 				}
-				if (signal?.aborted) {
+				if (context.signal?.aborted) {
 					controller.error(this.cancel_error);
 					return;
 				}
 			}
-			if (chunkBuffer.length > 0) {
-				const combined = this.combineChunks(chunkBuffer, totalBufferedBytes);
+			if (context.chunkBuffer.length > 0) {
+				const combined = this.combineChunks(context.chunkBuffer, context.totalBufferedBytes.value);
 				controller.enqueue(combined);
-				chunkBuffer.length = 0;
-				totalBufferedBytes = 0;
+				context.chunkBuffer.length = 0;
+				context.totalBufferedBytes.value = 0;
 			}
 		} catch (e) {
 			controller.error(e);
-			cleanup();
+			context.cleanup();
 		}
 	}
 	cancel_error = "User cancelled the request";

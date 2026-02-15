@@ -143,7 +143,7 @@ export class CORSFetch {
       if (signal?.aborted) throw this.cancel_error
 
       const chunkBuffer: Uint8Array[] = []
-      let totalBufferedBytes = 0
+      const totalBufferedBytes = { value: 0 }
 
       // no body for 101, 103, 204, 205 and 304
       // see https://fetch.spec.whatwg.org/#null-body-status
@@ -173,41 +173,35 @@ export class CORSFetch {
   }
 
   private async readStream(
-    {
-      signal,
-      chunkBuffer,
-      totalBufferedBytes,
-      responseRid,
-      cleanup
-    }: {
+    context: {
       signal?: AbortSignal | null
       chunkBuffer: Uint8Array[]
-      totalBufferedBytes: number
+      totalBufferedBytes: { value: number } // 改为对象引用
       responseRid: string | null
       cleanup: () => void
     },
     controller: ReadableStreamDefaultController
   ) {
-    if (signal?.aborted) {
+    if (context.signal?.aborted) {
       controller.error(this.cancel_error)
       return
     }
 
     try {
       while (
-        chunkBuffer.length < this._streamConfig.bufferSize &&
-        totalBufferedBytes < this._streamConfig.maxBufferBytes
+        context.chunkBuffer.length < this._streamConfig.bufferSize &&
+        context.totalBufferedBytes.value < this._streamConfig.maxBufferBytes
       ) {
         const data = await invoke<ArrayBuffer>('plugin:cors-fetch|fetch_read_body', {
-          rid: responseRid
+          rid: context.responseRid
         })
         const dataUint8 = new Uint8Array(data)
         const lastByte = dataUint8[dataUint8.byteLength - 1]
         const actualData = dataUint8.slice(0, dataUint8.byteLength - 1)
 
         if (lastByte === 1) {
-          if (chunkBuffer.length > 0) {
-            const combined = this.combineChunks(chunkBuffer, totalBufferedBytes)
+          if (context.chunkBuffer.length > 0) {
+            const combined = this.combineChunks(context.chunkBuffer, context.totalBufferedBytes.value)
             controller.enqueue(combined)
           }
           controller.close()
@@ -215,28 +209,28 @@ export class CORSFetch {
         }
 
         if (actualData.byteLength > 0) {
-          chunkBuffer.push(actualData)
-          totalBufferedBytes += actualData.byteLength
+          context.chunkBuffer.push(actualData)
+          context.totalBufferedBytes.value += actualData.byteLength
         }
 
-        if (signal?.aborted) {
+        if (context.signal?.aborted) {
           controller.error(this.cancel_error)
           return
         }
       }
 
       // 推送缓冲的数据
-      if (chunkBuffer.length > 0) {
-        const combined = this.combineChunks(chunkBuffer, totalBufferedBytes)
+      if (context.chunkBuffer.length > 0) {
+        const combined = this.combineChunks(context.chunkBuffer, context.totalBufferedBytes.value)
         controller.enqueue(combined)
 
         // 清空缓冲区
-        chunkBuffer.length = 0
-        totalBufferedBytes = 0
+        context.chunkBuffer.length = 0
+        context.totalBufferedBytes.value = 0
       }
     } catch (e) {
       controller.error(e)
-      cleanup()
+      context.cleanup()
     }
   }
 
