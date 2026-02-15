@@ -165,15 +165,11 @@ pub fn get_requester(state: &Http, config: &ClientConfig) -> Arc<Client> {
 }
 
 #[inline]
-pub fn prepare_requester(state: &Http, config: &ClientConfig) -> () {
+pub fn prepare_requester(state: &Http, config: &ClientConfig) {
   let cache_key = ClientCacheKey::from_config(config);
-  if !state.pool.contains_key(&cache_key)  {
-    let requester = build_requester(state, config);
-    match requester {
-      Ok(requester) => {
-        state.pool.insert(cache_key, Arc::new(requester));
-      }
-      Err(_) => (),
+  if let dashmap::mapref::entry::Entry::Vacant(entry) = state.pool.entry(cache_key) {
+    if let Ok(requester) = build_requester(state, config) {
+      entry.insert(Arc::new(requester));
     }
   }
 }

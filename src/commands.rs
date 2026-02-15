@@ -3,43 +3,63 @@
 // SPDX-License-Identifier: MIT
 
 use crate::{
-  Error, Http, Result, headers::create_headers, request::{self, ContentConfig, get_requester}
+  headers::create_headers,
+  request::{self, get_requester, ContentConfig},
+  Error, Http, Result,
 };
+use futures_util::StreamExt;
 use http::{header, Method, StatusCode};
 use serde::Serialize;
-use std::{future::Future, pin::Pin, sync::Arc, time::Duration};
-use tauri::{
-  async_runtime::Mutex, command, Manager, ResourceId, ResourceTable, Runtime, State, Webview,
+use std::time::Duration;
+use tauri::{command, Manager, ResourceId, ResourceTable, Runtime, State, Webview};
+use tokio::{
+  sync::{
+    mpsc,
+    oneshot::{self, Sender},
+  },
+  task::JoinHandle,
 };
-use tokio::sync::oneshot::{channel, Receiver, Sender};
 use tracing::Level;
 
-struct ReqwestResponse(reqwest::Response);
-impl tauri::Resource for ReqwestResponse {}
+const BODY_CHUNK_CHANNEL_CAPACITY: usize = 16;
 
-type CancelableResponseResult = Result<reqwest::Response>;
-type CancelableResponseFuture =
-  Pin<Box<dyn Future<Output = CancelableResponseResult> + Send + Sync>>;
+type ResponseResult = Result<reqwest::Response>;
+type ResponseReceiver = oneshot::Receiver<ResponseResult>;
+type AbortReceiver = oneshot::Receiver<()>;
+
+struct StreamingResponse {
+  chunk_rx: mpsc::Receiver<Vec<u8>>,
+  worker: JoinHandle<()>,
+}
+impl tauri::Resource for StreamingResponse {}
 
 struct FetchRequest {
-  fut: Mutex<CancelableResponseFuture>,
-  abort_tx: Mutex<Option<Sender<()>>>,
-  abort_rx: Mutex<Option<Receiver<()>>>,
+  response_rx: Option<ResponseReceiver>,
+  abort_tx: Option<Sender<()>>,
+  abort_rx: Option<AbortReceiver>,
 }
 impl tauri::Resource for FetchRequest {}
 
 trait AddRequest {
-  fn add_request(&mut self, fut: CancelableResponseFuture) -> ResourceId;
+  fn add_request(
+    &mut self,
+    response_rx: ResponseReceiver,
+    abort_tx: Sender<()>,
+    abort_rx: AbortReceiver,
+  ) -> ResourceId;
 }
 
 impl AddRequest for ResourceTable {
-  fn add_request(&mut self, fut: CancelableResponseFuture) -> ResourceId {
-    let (tx, rx) = channel::<()>();
-
+  fn add_request(
+    &mut self,
+    response_rx: ResponseReceiver,
+    abort_tx: Sender<()>,
+    abort_rx: AbortReceiver,
+  ) -> ResourceId {
     let req = FetchRequest {
-      fut: Mutex::new(fut),
-      abort_tx: Mutex::new(Some(tx)),
-      abort_rx: Mutex::new(Some(rx)),
+      response_rx: Some(response_rx),
+      abort_tx: Some(abort_tx),
+      abort_rx: Some(abort_rx),
     };
 
     self.add(req)
@@ -56,12 +76,61 @@ pub struct FetchResponse {
   rid: ResourceId,
 }
 
-#[command]
-pub fn prepare_requester<R: Runtime>(
-  _: Webview<R>,
-  state: State<'_, Http>,
-  config: ContentConfig,
+fn create_request_channels() -> (
+  ResponseReceiver,
+  Sender<ResponseResult>,
+  Sender<()>,
+  AbortReceiver,
 ) {
+  let (response_tx, response_rx) = oneshot::channel();
+  let (abort_tx, abort_rx) = oneshot::channel();
+  (response_rx, response_tx, abort_tx, abort_rx)
+}
+
+fn spawn_request_sender(request: reqwest::RequestBuilder, response_tx: Sender<ResponseResult>) {
+  tauri::async_runtime::spawn(async move {
+    let _ = response_tx.send(request.send().await.map_err(Into::into));
+  });
+}
+
+fn spawn_static_response_sender(response: reqwest::Response, response_tx: Sender<ResponseResult>) {
+  tauri::async_runtime::spawn(async move {
+    let _ = response_tx.send(Ok(response));
+  });
+}
+
+fn spawn_body_streamer(response: reqwest::Response) -> StreamingResponse {
+  let (chunk_tx, chunk_rx) = mpsc::channel::<Vec<u8>>(BODY_CHUNK_CHANNEL_CAPACITY);
+
+  let worker = tokio::spawn(async move {
+    let mut stream = response.bytes_stream();
+
+    while let Some(item) = stream.next().await {
+      let chunk = match item {
+        Ok(chunk) => {
+          let mut chunk = chunk.to_vec();
+          chunk.push(0);
+          chunk
+        }
+        Err(_) => {
+          let _ = chunk_tx.send(vec![1]).await;
+          return;
+        }
+      };
+
+      if chunk_tx.send(chunk).await.is_err() {
+        return;
+      }
+    }
+
+    let _ = chunk_tx.send(vec![1]).await;
+  });
+
+  StreamingResponse { chunk_rx, worker }
+}
+
+#[command]
+pub fn prepare_requester<R: Runtime>(_: Webview<R>, state: State<'_, Http>, config: ContentConfig) {
   request::prepare_requester(&state, &config.client);
 }
 
@@ -108,10 +177,11 @@ pub async fn fetch<R: Runtime>(
       #[cfg(feature = "tracing")]
       tracing::trace!("{:?}", request);
 
-      let fut = async move { request.send().await.map_err(Into::into) };
+      let (response_rx, response_tx, abort_tx, abort_rx) = create_request_channels();
+      spawn_request_sender(request, response_tx);
 
       let mut resources_table = webview.resources_table();
-      let rid = resources_table.add_request(Box::pin(fut));
+      let rid = resources_table.add_request(response_rx, abort_tx, abort_rx);
 
       Ok(rid)
     }
@@ -130,9 +200,10 @@ pub async fn fetch<R: Runtime>(
       #[cfg(feature = "tracing")]
       tracing::trace!("{:?}", response);
 
-      let fut = async move { Ok(reqwest::Response::from(response)) };
+      let (response_rx, response_tx, abort_tx, abort_rx) = create_request_channels();
+      spawn_static_response_sender(reqwest::Response::from(response), response_tx);
       let mut resources_table = webview.resources_table();
-      let rid = resources_table.add_request(Box::pin(fut));
+      let rid = resources_table.add_request(response_rx, abort_tx, abort_rx);
       Ok(rid)
     }
     _ => Err(Error::SchemeNotSupport(scheme.to_string())),
@@ -146,8 +217,11 @@ pub async fn fetch_cancel<R: Runtime>(webview: Webview<R>, rid: ResourceId) -> c
     resources_table.get::<FetchRequest>(rid)?
   };
 
-  let mut abort_tx_guard = req.abort_tx.lock().await;
-  if let Some(tx) = abort_tx_guard.take() {
+  // SAFETY: resource table ensures exclusive mutable access during command execution.
+  let req_ptr = std::sync::Arc::as_ptr(&req) as *mut FetchRequest;
+  let req = unsafe { &mut *req_ptr };
+
+  if let Some(tx) = req.abort_tx.take() {
     let _ = tx.send(());
   }
 
@@ -164,15 +238,20 @@ pub async fn fetch_send<R: Runtime>(
     resources_table.get::<FetchRequest>(rid)?
   };
 
-  let abort_rx = {
-    let mut rx_guard = req.abort_rx.lock().await;
-    rx_guard.take().ok_or(Error::RequestCanceled)?
-  };
+  // SAFETY: resource table ensures exclusive mutable access during command execution.
+  let req_ptr = std::sync::Arc::as_ptr(&req) as *mut FetchRequest;
+  let req = unsafe { &mut *req_ptr };
 
-  let mut fut = req.fut.lock().await;
+  let abort_rx = req.abort_rx.take().ok_or(Error::RequestCanceled)?;
+  let response_rx = req.response_rx.take().ok_or(Error::RequestCanceled)?;
 
   let res = tokio::select! {
-    res = fut.as_mut() => res?,
+    res = response_rx => {
+      match res {
+        Ok(res) => res?,
+        Err(_) => return Err(Error::RequestCanceled),
+      }
+    },
     _ = abort_rx => {
       let mut resources_table = webview.resources_table();
       resources_table.close(rid)?;
@@ -196,7 +275,7 @@ pub async fn fetch_send<R: Runtime>(
   }
 
   let mut resources_table = webview.resources_table();
-  let rid = resources_table.add(ReqwestResponse(res));
+  let rid = resources_table.add(spawn_body_streamer(res));
 
   Ok(FetchResponse {
     status: status.as_u16(),
@@ -214,22 +293,17 @@ pub async fn fetch_read_body<R: Runtime>(
 ) -> crate::Result<tauri::ipc::Response> {
   let res = {
     let resources_table = webview.resources_table();
-    resources_table.get::<ReqwestResponse>(rid)?
+    resources_table.get::<StreamingResponse>(rid)?
   };
 
-  // SAFETY: we can access the inner value mutably
-  // because we are the only ones with a reference to it
-  // and we don't want to use `Arc::into_inner` because we want to keep the value in the table
-  // for potential future calls to `fetch_cancel_body`
-  let res_ptr = Arc::as_ptr(&res) as *mut ReqwestResponse;
+  // SAFETY: resource table ensures exclusive mutable access during command execution.
+  let res_ptr = std::sync::Arc::as_ptr(&res) as *mut StreamingResponse;
   let res = unsafe { &mut *res_ptr };
-  let res = &mut res.0;
 
-  let Some(chunk) = res.chunk().await? else {
+  let Some(chunk) = res.chunk_rx.recv().await else {
     let mut resources_table = webview.resources_table();
     resources_table.close(rid)?;
 
-    // return a response with a single byte to indicate that the body is empty
     return Ok(tauri::ipc::Response::new(vec![1]));
   };
 
@@ -245,6 +319,15 @@ pub async fn fetch_cancel_body<R: Runtime>(
   webview: Webview<R>,
   rid: ResourceId,
 ) -> crate::Result<()> {
+  let response = {
+    let resources_table = webview.resources_table();
+    resources_table.get::<StreamingResponse>(rid)
+  };
+
+  if let Ok(response) = response {
+    response.worker.abort();
+  }
+
   let mut resources_table = webview.resources_table();
   resources_table.close(rid)?;
   Ok(())
