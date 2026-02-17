@@ -291,7 +291,7 @@ var CORSFetch = class CORSFetch {
 				pull: (c) => this.readStream({
 					chunkBuffer,
 					cleanup,
-					totalBufferedBytes,
+					totalBufferedBytes: { value: totalBufferedBytes },
 					responseRid,
 					signal
 				}, c),
@@ -315,14 +315,14 @@ var CORSFetch = class CORSFetch {
 			return;
 		}
 		try {
-			while (chunkBuffer.length < this._streamConfig.bufferSize && totalBufferedBytes < this._streamConfig.maxBufferBytes) {
+			while (chunkBuffer.length < this._streamConfig.bufferSize && totalBufferedBytes.value < this._streamConfig.maxBufferBytes) {
 				const data = await invoke("plugin:cors-fetch|fetch_read_body", { rid: responseRid });
 				const dataUint8 = new Uint8Array(data);
 				const lastByte = dataUint8[dataUint8.byteLength - 1];
 				const actualData = dataUint8.slice(0, dataUint8.byteLength - 1);
 				if (lastByte === 1) {
 					if (chunkBuffer.length > 0) {
-						const combined = this.combineChunks(chunkBuffer, totalBufferedBytes);
+						const combined = this.combineChunks(chunkBuffer, totalBufferedBytes.value);
 						controller.enqueue(combined);
 					}
 					controller.close();
@@ -330,7 +330,7 @@ var CORSFetch = class CORSFetch {
 				}
 				if (actualData.byteLength > 0) {
 					chunkBuffer.push(actualData);
-					totalBufferedBytes += actualData.byteLength;
+					totalBufferedBytes.value += actualData.byteLength;
 				}
 				if (signal?.aborted) {
 					controller.error(this.cancel_error);
@@ -338,10 +338,10 @@ var CORSFetch = class CORSFetch {
 				}
 			}
 			if (chunkBuffer.length > 0) {
-				const combined = this.combineChunks(chunkBuffer, totalBufferedBytes);
+				const combined = this.combineChunks(chunkBuffer, totalBufferedBytes.value);
 				controller.enqueue(combined);
 				chunkBuffer.length = 0;
-				totalBufferedBytes = 0;
+				totalBufferedBytes.value = 0;
 			}
 		} catch (e) {
 			controller.error(e);

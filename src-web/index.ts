@@ -59,7 +59,7 @@ export class CORSFetch {
   public config(newConfig: DeepPartial<CORSFetchConfig>) {
     this._config = merge(this._config, newConfig)
     return invoke<void>('plugin:cors-fetch|prepare_requester', { config: this._config }).catch(
-      () => {}
+      () => { }
     )
   }
 
@@ -94,12 +94,12 @@ export class CORSFetch {
       signal?.removeEventListener('abort', onAbort)
 
       if (responseRid !== null) {
-        invoke('plugin:cors-fetch|fetch_cancel_body', { rid: responseRid }).catch(() => {})
+        invoke('plugin:cors-fetch|fetch_cancel_body', { rid: responseRid }).catch(() => { })
         responseRid = null
       }
 
       if (rid !== null) {
-        invoke('plugin:cors-fetch|fetch_cancel', { rid }).catch(() => {})
+        invoke('plugin:cors-fetch|fetch_cancel', { rid }).catch(() => { })
         rid = null
       }
     }
@@ -150,10 +150,10 @@ export class CORSFetch {
       const body = [101, 103, 204, 205, 304].includes(status)
         ? null
         : new ReadableStream({
-            pull: c =>
-              this.readStream({ chunkBuffer, cleanup, totalBufferedBytes, responseRid, signal }, c),
-            cancel: onAbort
-          })
+          pull: c =>
+            this.readStream({ chunkBuffer: chunkBuffer, cleanup, totalBufferedBytes: { value: totalBufferedBytes }, responseRid, signal }, c),
+          cancel: onAbort
+        })
 
       const res = new Response(body, { status, statusText })
 
@@ -182,7 +182,7 @@ export class CORSFetch {
     }: {
       signal?: AbortSignal | null
       chunkBuffer: Uint8Array[]
-      totalBufferedBytes: number
+      totalBufferedBytes: { value: number }
       responseRid: string | null
       cleanup: () => void
     },
@@ -196,7 +196,7 @@ export class CORSFetch {
     try {
       while (
         chunkBuffer.length < this._streamConfig.bufferSize &&
-        totalBufferedBytes < this._streamConfig.maxBufferBytes
+        totalBufferedBytes.value < this._streamConfig.maxBufferBytes
       ) {
         const data = await invoke<ArrayBuffer>('plugin:cors-fetch|fetch_read_body', {
           rid: responseRid
@@ -207,7 +207,7 @@ export class CORSFetch {
 
         if (lastByte === 1) {
           if (chunkBuffer.length > 0) {
-            const combined = this.combineChunks(chunkBuffer, totalBufferedBytes)
+            const combined = this.combineChunks(chunkBuffer, totalBufferedBytes.value)
             controller.enqueue(combined)
           }
           controller.close()
@@ -216,7 +216,7 @@ export class CORSFetch {
 
         if (actualData.byteLength > 0) {
           chunkBuffer.push(actualData)
-          totalBufferedBytes += actualData.byteLength
+          totalBufferedBytes.value += actualData.byteLength
         }
 
         if (signal?.aborted) {
@@ -227,12 +227,12 @@ export class CORSFetch {
 
       // 推送缓冲的数据
       if (chunkBuffer.length > 0) {
-        const combined = this.combineChunks(chunkBuffer, totalBufferedBytes)
+        const combined = this.combineChunks(chunkBuffer, totalBufferedBytes.value)
         controller.enqueue(combined)
 
         // 清空缓冲区
         chunkBuffer.length = 0
-        totalBufferedBytes = 0
+        totalBufferedBytes.value = 0
       }
     } catch (e) {
       controller.error(e)
