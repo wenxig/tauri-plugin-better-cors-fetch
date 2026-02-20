@@ -74,8 +74,12 @@ export class CORSFetch {
   }
 
   public async fetch(input: Parameters<typeof fetch>[0], init?: CORSFetchInit, force = false) {
+
     const urlStr = input instanceof Request ? input.url : String(input)
 
+    if (!force && urlStr.startsWith('data:')) {
+      return window.fetchNative(input, init)
+    }
     if (!force && !this.shouldUseCORSProxy(urlStr)) {
       return window.fetchNative(input, init)
     }

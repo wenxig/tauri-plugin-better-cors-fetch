@@ -246,6 +246,7 @@ var CORSFetch = class CORSFetch {
 	}
 	async fetch(input, init, force = false) {
 		const urlStr = input instanceof Request ? input.url : String(input);
+		if (!force && urlStr.startsWith("data:")) return window.fetchNative(input, init);
 		if (!force && !this.shouldUseCORSProxy(urlStr)) return window.fetchNative(input, init);
 		const signal = isString(input) ? init?.signal : input instanceof URL ? init?.signal : init?.signal ?? input.signal;
 		if (signal?.aborted) throw this.cancel_error;
