@@ -349,3 +349,23 @@ pub async fn fetch_cancel_body<R: Runtime>(
   resources_table.close(rid)?;
   Ok(())
 }
+
+
+#[command]
+pub async fn set_cookie<R: Runtime>(
+  webview: Webview<R>,
+  config: ResourceId,
+) -> crate::Result<()> {
+  let response = {
+    let resources_table = webview.resources_table();
+    resources_table.get::<StreamingResponse>(rid)
+  };
+
+  if let Ok(response) = response {
+    response.worker.abort();
+  }
+
+  let mut resources_table = webview.resources_table();
+  resources_table.close(rid)?;
+  Ok(())
+}

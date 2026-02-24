@@ -246,6 +246,7 @@ var CORSFetch = class CORSFetch {
 	}
 	async fetch(input, init, force = false) {
 		const urlStr = input instanceof Request ? input.url : String(input);
+		if (!force && urlStr.startsWith("data:")) return window.fetchNative(input, init);
 		if (!force && !this.shouldUseCORSProxy(urlStr)) return window.fetchNative(input, init);
 		const signal = isString(input) ? init?.signal : input instanceof URL ? init?.signal : init?.signal ?? input.signal;
 		if (signal?.aborted) throw this.cancel_error;
@@ -291,7 +292,7 @@ var CORSFetch = class CORSFetch {
 				pull: (c) => this.readStream({
 					chunkBuffer,
 					cleanup,
-					totalBufferedBytes,
+					totalBufferedBytes: { value: totalBufferedBytes },
 					responseRid,
 					signal
 				}, c),
@@ -315,33 +316,33 @@ var CORSFetch = class CORSFetch {
 			return;
 		}
 		try {
-			while (context.chunkBuffer.length < this._streamConfig.bufferSize && context.totalBufferedBytes.value < this._streamConfig.maxBufferBytes) {
-				const data = await invoke("plugin:cors-fetch|fetch_read_body", { rid: context.responseRid });
+			while (chunkBuffer.length < this._streamConfig.bufferSize && totalBufferedBytes.value < this._streamConfig.maxBufferBytes) {
+				const data = await invoke("plugin:cors-fetch|fetch_read_body", { rid: responseRid });
 				const dataUint8 = new Uint8Array(data);
 				const lastByte = dataUint8[dataUint8.byteLength - 1];
 				const actualData = dataUint8.slice(0, dataUint8.byteLength - 1);
 				if (lastByte === 1) {
-					if (context.chunkBuffer.length > 0) {
-						const combined = this.combineChunks(context.chunkBuffer, context.totalBufferedBytes.value);
+					if (chunkBuffer.length > 0) {
+						const combined = this.combineChunks(chunkBuffer, totalBufferedBytes.value);
 						controller.enqueue(combined);
 					}
 					controller.close();
 					return;
 				}
 				if (actualData.byteLength > 0) {
-					context.chunkBuffer.push(actualData);
-					context.totalBufferedBytes.value += actualData.byteLength;
+					chunkBuffer.push(actualData);
+					totalBufferedBytes.value += actualData.byteLength;
 				}
 				if (context.signal?.aborted) {
 					controller.error(this.cancel_error);
 					return;
 				}
 			}
-			if (context.chunkBuffer.length > 0) {
-				const combined = this.combineChunks(context.chunkBuffer, context.totalBufferedBytes.value);
+			if (chunkBuffer.length > 0) {
+				const combined = this.combineChunks(chunkBuffer, totalBufferedBytes.value);
 				controller.enqueue(combined);
-				context.chunkBuffer.length = 0;
-				context.totalBufferedBytes.value = 0;
+				chunkBuffer.length = 0;
+				totalBufferedBytes.value = 0;
 			}
 		} catch (e) {
 			controller.error(e);

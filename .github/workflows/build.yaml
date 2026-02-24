@@ -1,0 +1,63 @@
+name: 构建和发布
+
+on:
+  push:
+    branches: ['main']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: ${{ github.event.head_commit && contains(github.event.head_commit.message, '[pub]') }}
+    runs-on: ubuntu-latest
+    env:
+      HUSKY: 0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.30.0
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 25
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # build
+      - name: Change version
+        id: set-version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IS_DUR_RUN: true
+        run: |
+          OLD_VERSION="$(node ./script/update-version.mts)"
+          echo "old_version=$OLD_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: |
+          cargo test
+          node run build
+
+      - name: Restore version
+        run: |
+          node ./script/set-version.mts ${{ steps.set-version.outputs.old_version }}
+
+      #publish
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm exec semantic-release
