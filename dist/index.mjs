@@ -298,7 +298,7 @@ var CORSFetch = class CORSFetch {
 				pull: (c) => this.readStream({
 					chunkBuffer,
 					cleanup,
-					totalBufferedBytes: { value: totalBufferedBytes },
+					totalBufferedBytes,
 					responseRid,
 					signal
 				}, c),
@@ -316,14 +316,14 @@ var CORSFetch = class CORSFetch {
 			throw err;
 		}
 	}
-	async readStream(context, controller) {
-		if (context.signal?.aborted) {
+	async readStream({ totalBufferedBytes, signal, chunkBuffer, cleanup, responseRid }, controller) {
+		if (signal?.aborted) {
 			controller.error(this.cancel_error);
 			return;
 		}
 		try {
 			while (chunkBuffer.length < this._streamConfig.bufferSize && totalBufferedBytes.value < this._streamConfig.maxBufferBytes) {
-				const data = await invoke("plugin:cors-fetch|fetch_read_body", { rid: context.responseRid });
+				const data = await invoke("plugin:cors-fetch|fetch_read_body", { rid: responseRid });
 				const dataUint8 = new Uint8Array(data);
 				const lastByte = dataUint8[dataUint8.byteLength - 1];
 				const actualData = dataUint8.slice(0, dataUint8.byteLength - 1);
@@ -339,7 +339,7 @@ var CORSFetch = class CORSFetch {
 					chunkBuffer.push(actualData);
 					totalBufferedBytes.value += actualData.byteLength;
 				}
-				if (context.signal?.aborted) {
+				if (signal?.aborted) {
 					controller.error(this.cancel_error);
 					return;
 				}
@@ -352,7 +352,7 @@ var CORSFetch = class CORSFetch {
 			}
 		} catch (e) {
 			controller.error(e);
-			context.cleanup();
+			cleanup();
 		}
 	}
 	cancel_error = "User cancelled the request";
