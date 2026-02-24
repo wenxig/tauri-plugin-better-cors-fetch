@@ -1,6 +1,12 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": [".vscode", "package.json", "./src","./permissions"],
+  "ignorePatterns": [
+    ".vscode",
+    "package.json",
+    "./src",
+    "./permissions",
+    "types/*"
+  ],
   "endOfLine": "lf",
   "semi": false,
   "useTabs": false,
@@ -23,13 +29,32 @@
   "quoteProps": "consistent",
   "experimentalSortImports": {
     "groups": [
-      ["side-effect"],
-      ["builtin"],
-      ["external", "type-external"],
-      ["internal", "type-internal"],
-      ["parent", "type-parent"],
-      ["sibling", "type-sibling"],
-      ["index", "type-index"]
+      [
+        "side-effect"
+      ],
+      [
+        "builtin"
+      ],
+      [
+        "external",
+        "type-external"
+      ],
+      [
+        "internal",
+        "type-internal"
+      ],
+      [
+        "parent",
+        "type-parent"
+      ],
+      [
+        "sibling",
+        "type-sibling"
+      ],
+      [
+        "index",
+        "type-index"
+      ]
     ]
   }
 }

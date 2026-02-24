@@ -35,7 +35,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --frozen-lockfile
+          sudo apt-get install libglib2.0
 
       # build
       - name: Change version
