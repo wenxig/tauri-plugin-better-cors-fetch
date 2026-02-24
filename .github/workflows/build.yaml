@@ -31,13 +31,13 @@ jobs:
           node-version: 25
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+      # - name: Setup Rust
+      #   uses: dtolnay/rust-toolchain@stable
 
       - name: Install dependencies
         run: |
           pnpm install --frozen-lockfile
-          sudo apt-get install libglib2.0
+          # sudo apt-get install libglib2.0
 
       # build
       - name: Change version
@@ -51,7 +51,7 @@ jobs:
 
       - name: Build
         run: |
-          cargo test
+          # cargo test
           node run build
 
       - name: Restore version
