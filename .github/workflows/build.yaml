@@ -20,7 +20,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-          
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
@@ -53,7 +53,7 @@ jobs:
       - name: Build
         run: |
           # cargo test
-          node run build
+          pnpm run build
 
       - name: Restore version
         run: |
