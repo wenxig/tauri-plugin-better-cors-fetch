@@ -9,6 +9,7 @@ use crate::{
 };
 use futures_util::StreamExt;
 use http::{header, Method, StatusCode};
+use reqwest::cookie::CookieStore;
 use serde::Serialize;
 use std::time::Duration;
 use tauri::{command, Manager, ResourceId, ResourceTable, Runtime, State, Webview};
@@ -351,21 +352,14 @@ pub async fn fetch_cancel_body<R: Runtime>(
 }
 
 
+
+
 #[command]
 pub async fn set_cookie<R: Runtime>(
   webview: Webview<R>,
-  config: ResourceId,
+  state: State<'_, Http>,
+  config: _
 ) -> crate::Result<()> {
-  let response = {
-    let resources_table = webview.resources_table();
-    resources_table.get::<StreamingResponse>(rid)
-  };
-
-  if let Ok(response) = response {
-    response.worker.abort();
-  }
-
-  let mut resources_table = webview.resources_table();
-  resources_table.close(rid)?;
+  
   Ok(())
 }
