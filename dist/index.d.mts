@@ -54,6 +54,7 @@ type DeepPartial<T> = { [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]>
 type CORSFetchInit = RequestInit & Partial<CORSFetchConfig['request']>;
 declare class CORSFetch {
   static init(config?: DeepPartial<CORSFetchConfig>, inject?: boolean): CORSFetch;
+  static setCookie(url: string | URL, content: string): Promise<void>;
   protected constructor(inject?: boolean, config?: DeepPartial<CORSFetchConfig>);
   private _streamConfig;
   private _config;

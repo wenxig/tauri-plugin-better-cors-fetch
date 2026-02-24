@@ -9,8 +9,9 @@ use crate::{
 };
 use futures_util::StreamExt;
 use http::{header, Method, StatusCode};
+#[cfg(feature = "cookies")]
 use reqwest::cookie::CookieStore;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tauri::{command, Manager, ResourceId, ResourceTable, Runtime, State, Webview};
 use tokio::{
@@ -76,6 +77,15 @@ pub struct FetchResponse {
   headers: Vec<(String, String)>,
   url: String,
   rid: ResourceId,
+}
+
+#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SetCookieConfig {
+  #[ts(type = "string")]
+  url: url::Url,
+  content: String,
 }
 
 fn create_request_channels() -> (
@@ -351,15 +361,26 @@ pub async fn fetch_cancel_body<R: Runtime>(
   Ok(())
 }
 
-
-
-
 #[command]
 pub async fn set_cookie<R: Runtime>(
-  webview: Webview<R>,
+  _webview: Webview<R>,
   state: State<'_, Http>,
-  config: _
+  config: SetCookieConfig,
 ) -> crate::Result<()> {
-  
+  #[cfg(feature = "cookies")]
+  {
+    let mut header_value = reqwest::header::HeaderValue::from_str(&config.content)?;
+    header_value.set_sensitive(true);
+    let mut header_values = std::iter::once(&header_value);
+    state
+      .cookies_jar
+      .set_cookies(&mut header_values, &config.url);
+  }
+
+  #[cfg(not(feature = "cookies"))]
+  {
+    let _ = (&state, &config);
+  }
+
   Ok(())
 }

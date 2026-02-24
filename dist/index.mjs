@@ -1,4 +1,4 @@
-//#region node_modules/.pnpm/@tauri-apps+api@2.9.1/node_modules/@tauri-apps/api/external/tslib/tslib.es6.js
+//#region node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/external/tslib/tslib.es6.js
 /******************************************************************************
 Copyright (c) Microsoft Corporation.
 
@@ -26,7 +26,7 @@ function __classPrivateFieldSet(receiver, state, value, kind, f) {
 }
 
 //#endregion
-//#region node_modules/.pnpm/@tauri-apps+api@2.9.1/node_modules/@tauri-apps/api/core.js
+//#region node_modules/.pnpm/@tauri-apps+api@2.10.1/node_modules/@tauri-apps/api/core.js
 var _Channel_onmessage, _Channel_nextMessageIndex, _Channel_pendingMessages, _Channel_messageEndIndex, _Resource_rid;
 /**
 * Invoke your custom commands.
@@ -205,6 +205,12 @@ var CORSFetch = class CORSFetch {
 		}
 		return new CORSFetch(false, config);
 	}
+	static setCookie(url, content) {
+		return invoke("plugin:cors-fetch|set_cookie", { config: {
+			url: String(url),
+			content
+		} });
+	}
 	constructor(inject = true, config) {
 		if (inject) {
 			window.fetchNative = window.fetch.bind(window);
@@ -317,7 +323,7 @@ var CORSFetch = class CORSFetch {
 		}
 		try {
 			while (chunkBuffer.length < this._streamConfig.bufferSize && totalBufferedBytes.value < this._streamConfig.maxBufferBytes) {
-				const data = await invoke("plugin:cors-fetch|fetch_read_body", { rid: responseRid });
+				const data = await invoke("plugin:cors-fetch|fetch_read_body", { rid: context.responseRid });
 				const dataUint8 = new Uint8Array(data);
 				const lastByte = dataUint8[dataUint8.byteLength - 1];
 				const actualData = dataUint8.slice(0, dataUint8.byteLength - 1);
