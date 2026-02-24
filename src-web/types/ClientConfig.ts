@@ -2,4 +2,10 @@
 import type { DangerousSettings } from "./DangerousSettings";
 import type { Proxy } from "./Proxy";
 
-export type ClientConfig = { connectTimeout: number | null, maxRedirections: number | null, proxy: Proxy | null, danger: DangerousSettings | null, userAgent: string | null, };
+export type ClientConfig = {
+  connectTimeout: number | null;
+  maxRedirections: number | null;
+  proxy: Proxy | null;
+  danger: DangerousSettings | null;
+  userAgent: string | null;
+};
