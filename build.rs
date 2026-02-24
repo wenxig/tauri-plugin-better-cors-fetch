@@ -4,7 +4,8 @@ const COMMANDS: &[&str] = &[
   "fetch_send",
   "fetch_read_body",
   "fetch_cancel_body",
-  "prepare_requester"
+  "prepare_requester",
+  "set_cookie",
 ];
 
 fn main() {

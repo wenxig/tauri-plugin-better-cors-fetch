@@ -92,7 +92,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
       commands::fetch_send,
       commands::fetch_read_body,
       commands::fetch_cancel_body,
-      commands::prepare_requester
+      commands::prepare_requester,
+      commands::set_cookie
     ])
     .build()
 }

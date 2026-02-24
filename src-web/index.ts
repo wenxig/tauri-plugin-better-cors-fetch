@@ -34,13 +34,18 @@ export class CORSFetch {
     }
     return new CORSFetch(false, config)
   }
+  public static setCookie(url: string | URL, content: string) {
+    return invoke<void>('plugin:cors-fetch|set_cookie', {
+      config: { url: String(url), content }
+    })
+  }
   protected constructor(inject = true, config?: DeepPartial<CORSFetchConfig>) {
     if (inject) {
       window.fetchNative = window.fetch.bind(window)
       window.fetch = this.fetch.bind(this)
       window.fetchCORS = (input, init) => this.fetch(input, init, true)
     }
-    this.config(config ?? {})
+    void this.config(config ?? {})
   }
 
   private _streamConfig = { bufferSize: 5, maxBufferBytes: 256 * 1024 }

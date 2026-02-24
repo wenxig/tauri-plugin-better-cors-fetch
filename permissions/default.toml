@@ -6,5 +6,6 @@ permissions = [
   "allow-fetch-cancel",
   "allow-fetch-send",
   "allow-fetch-read-body",
-  "allow-fetch-cancel-body"
+  "allow-fetch-cancel-body",
+  "allow-set-cookie"
 ]

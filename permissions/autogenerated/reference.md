@@ -9,6 +9,7 @@ Allows all fetch operations
 - `allow-fetch-send`
 - `allow-fetch-read-body`
 - `allow-fetch-cancel-body`
+- `allow-set-cookie`
 
 ## Permission Table
 
@@ -149,6 +150,32 @@ Denies the fetch_send command without any pre-configured scope.
 </td>
 </tr>
 
+
+<tr>
+<td>
+
+`better-cors-fetch:allow-set-cookie`
+
+</td>
+<td>
+
+Enables the set_cookie command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`better-cors-fetch:deny-set-cookie`
+
+</td>
+<td>
+
+Denies the set_cookie command without any pre-configured scope.
+
+</td>
+</tr>
 <tr>
 <td>
 
