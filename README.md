@@ -100,6 +100,46 @@ CORSFetch.init({
 - `window.fetchCORS(url, init)`: Explicitly use the CORS-bypassing fetch.
 - `window.fetchNative(url, init)`: Use the original browser fetch (subject to CORS).
 
+### Cookies
+
+You can set cookies from TS by calling `CORSFetch.setCookie(url, content)` where `content` is a standard `Set-Cookie` header value.
+
+```ts
+// Apply to the apex domain and all subdomains.
+await CORSFetch.setCookie(
+  'https://example.com',
+  'session=abc123; Domain=example.com; Path=/; Secure; HttpOnly; SameSite=Lax',
+)
+```
+
+This plugin stores cookies using RFC 6265 matching rules (domain/path/secure/expiry), not plain URL prefix matching.
+
+For convenience, you can also build cookies by parts:
+
+```ts
+// 1) Host-only cookie (only sent to example.com)
+await CORSFetch.setCookieByParts('https://example.com', 'hostOnly', '1', {
+  path: '/',
+  secure: true,
+  sameSite: 'Lax',
+})
+
+// 2) Whole-site + subdomain cookie
+await CORSFetch.setCookieByParts('https://example.com', 'allSite', '1', {
+  domain: 'example.com',
+  path: '/',
+  secure: true,
+  sameSite: 'Lax',
+})
+
+// 3) More granular scope
+await CORSFetch.setCookieByParts('https://example.com/account/login', 'scoped', '1', {
+  path: '/account',
+  maxAge: 60 * 60,
+  sameSite: 'Strict',
+})
+```
+
 ## Limitations
 
 - **Fetch Only**: Does not support `XMLHttpRequest` (XHR).

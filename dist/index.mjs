@@ -211,6 +211,20 @@ var CORSFetch = class CORSFetch {
 			content
 		} });
 	}
+	static setCookieByParts(url, name, value, options = {}) {
+		const segments = [`${name}=${value}`];
+		if (options.domain) segments.push(`Domain=${options.domain}`);
+		if (options.path) segments.push(`Path=${options.path}`);
+		if (options.expires) {
+			const expires = options.expires instanceof Date ? options.expires.toUTCString() : new Date(options.expires).toUTCString();
+			segments.push(`Expires=${expires}`);
+		}
+		if (typeof options.maxAge === "number") segments.push(`Max-Age=${options.maxAge}`);
+		if (options.secure) segments.push("Secure");
+		if (options.httpOnly) segments.push("HttpOnly");
+		if (options.sameSite) segments.push(`SameSite=${options.sameSite}`);
+		return CORSFetch.setCookie(url, segments.join("; "));
+	}
 	constructor(inject = true, config) {
 		if (inject) {
 			window.fetchNative = window.fetch.bind(window);
