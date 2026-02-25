@@ -21,6 +21,17 @@ export interface CORSFetchConfig {
   exclude: (string | RegExp)[];
   request: ClientConfig;
 }
+
+export interface CookieOptions {
+  domain?: string;
+  path?: string;
+  expires?: Date | string;
+  maxAge?: number;
+  secure?: boolean;
+  httpOnly?: boolean;
+  sameSite?: "Strict" | "Lax" | "None";
+}
+
 type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
 };
@@ -38,6 +49,31 @@ export class CORSFetch {
     return invoke<void>("plugin:cors-fetch|set_cookie", {
       config: { url: String(url), content },
     });
+  }
+
+  public static setCookieByParts(
+    url: string | URL,
+    name: string,
+    value: string,
+    options: CookieOptions = {},
+  ) {
+    const segments = [`${name}=${value}`];
+
+    if (options.domain) segments.push(`Domain=${options.domain}`);
+    if (options.path) segments.push(`Path=${options.path}`);
+    if (options.expires) {
+      const expires =
+        options.expires instanceof Date
+          ? options.expires.toUTCString()
+          : new Date(options.expires).toUTCString();
+      segments.push(`Expires=${expires}`);
+    }
+    if (typeof options.maxAge === "number") segments.push(`Max-Age=${options.maxAge}`);
+    if (options.secure) segments.push("Secure");
+    if (options.httpOnly) segments.push("HttpOnly");
+    if (options.sameSite) segments.push(`SameSite=${options.sameSite}`);
+
+    return CORSFetch.setCookie(url, segments.join("; "));
   }
   protected constructor(inject = true, config?: DeepPartial<CORSFetchConfig>) {
     if (inject) {

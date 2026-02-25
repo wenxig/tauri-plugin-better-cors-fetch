@@ -50,11 +50,21 @@ interface CORSFetchConfig {
   exclude: (string | RegExp)[];
   request: ClientConfig;
 }
+interface CookieOptions {
+  domain?: string;
+  path?: string;
+  expires?: Date | string;
+  maxAge?: number;
+  secure?: boolean;
+  httpOnly?: boolean;
+  sameSite?: "Strict" | "Lax" | "None";
+}
 type DeepPartial<T> = { [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P] };
 type CORSFetchInit = RequestInit & Partial<CORSFetchConfig["request"]>;
 declare class CORSFetch {
   static init(config?: DeepPartial<CORSFetchConfig>, inject?: boolean): CORSFetch;
   static setCookie(url: string | URL, content: string): Promise<void>;
+  static setCookieByParts(url: string | URL, name: string, value: string, options?: CookieOptions): Promise<void>;
   protected constructor(inject?: boolean, config?: DeepPartial<CORSFetchConfig>);
   private _streamConfig;
   private _config;
@@ -67,4 +77,4 @@ declare class CORSFetch {
   private shouldUseCORSProxy;
 }
 //#endregion
-export { CORSFetch, CORSFetchConfig, CORSFetchInit };
+export { CORSFetch, CORSFetchConfig, CORSFetchInit, CookieOptions };
