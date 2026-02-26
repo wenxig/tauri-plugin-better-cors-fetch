@@ -18,6 +18,7 @@ use tokio::{
   sync::{
     mpsc,
     oneshot::{self, Sender},
+    Mutex,
   },
   task::JoinHandle,
 };
@@ -31,12 +32,16 @@ type ResponseReceiver = oneshot::Receiver<ResponseResult>;
 type AbortReceiver = oneshot::Receiver<()>;
 
 struct StreamingResponse {
-  chunk_rx: mpsc::Receiver<Vec<u8>>,
+  chunk_rx: Mutex<mpsc::Receiver<Vec<u8>>>,
   worker: JoinHandle<()>,
 }
 impl tauri::Resource for StreamingResponse {}
 
 struct FetchRequest {
+  state: Mutex<FetchRequestState>,
+}
+
+struct FetchRequestState {
   response_rx: Option<ResponseReceiver>,
   abort_tx: Option<Sender<()>>,
   abort_rx: Option<AbortReceiver>,
@@ -60,9 +65,11 @@ impl AddRequest for ResourceTable {
     abort_rx: AbortReceiver,
   ) -> ResourceId {
     let req = FetchRequest {
-      response_rx: Some(response_rx),
-      abort_tx: Some(abort_tx),
-      abort_rx: Some(abort_rx),
+      state: Mutex::new(FetchRequestState {
+        response_rx: Some(response_rx),
+        abort_tx: Some(abort_tx),
+        abort_rx: Some(abort_rx),
+      }),
     };
 
     self.add(req)
@@ -131,14 +138,7 @@ fn spawn_body_streamer(response: reqwest::Response) -> StreamingResponse {
 
     while let Some(item) = stream.next().await {
       let chunk = match item {
-        Ok(chunk) => {
-          // 预分配空间，避免重新分配
-          let len = chunk.len();
-          let mut vec = Vec::with_capacity(len + 1);
-          vec.extend_from_slice(&chunk);
-          vec.push(0);
-          vec
-        }
+        Ok(chunk) => chunk.to_vec(),
         Err(_) => {
           let _ = chunk_tx.send(vec![1]).await;
           return;
@@ -153,7 +153,10 @@ fn spawn_body_streamer(response: reqwest::Response) -> StreamingResponse {
     let _ = chunk_tx.send(vec![1]).await;
   });
 
-  StreamingResponse { chunk_rx, worker }
+  StreamingResponse {
+    chunk_rx: Mutex::new(chunk_rx),
+    worker,
+  }
 }
 
 #[command]
@@ -244,9 +247,7 @@ pub async fn fetch_cancel<R: Runtime>(webview: Webview<R>, rid: ResourceId) -> c
     resources_table.get::<FetchRequest>(rid)?
   };
 
-  // SAFETY: resource table ensures exclusive mutable access during command execution.
-  let req_ptr = std::sync::Arc::as_ptr(&req) as *mut FetchRequest;
-  let req = unsafe { &mut *req_ptr };
+  let mut req = req.state.lock().await;
 
   if let Some(tx) = req.abort_tx.take() {
     let _ = tx.send(());
@@ -265,9 +266,7 @@ pub async fn fetch_send<R: Runtime>(
     resources_table.get::<FetchRequest>(rid)?
   };
 
-  // SAFETY: resource table ensures exclusive mutable access during command execution.
-  let req_ptr = std::sync::Arc::as_ptr(&req) as *mut FetchRequest;
-  let req = unsafe { &mut *req_ptr };
+  let mut req = req.state.lock().await;
 
   let abort_rx = req.abort_rx.take().ok_or(Error::RequestCanceled)?;
   let response_rx = req.response_rx.take().ok_or(Error::RequestCanceled)?;
@@ -324,18 +323,20 @@ pub async fn fetch_read_body<R: Runtime>(
     resources_table.get::<StreamingResponse>(rid)?
   };
 
-  // SAFETY: resource table ensures exclusive mutable access during command execution.
-  let res_ptr = std::sync::Arc::as_ptr(&res) as *mut StreamingResponse;
-  let res = unsafe { &mut *res_ptr };
+  let mut chunk_rx = res.chunk_rx.lock().await;
 
-  let Some(chunk) = res.chunk_rx.recv().await else {
+  let Some(chunk) = chunk_rx.recv().await else {
     let mut resources_table = webview.resources_table();
     resources_table.close(rid)?;
 
     return Ok(tauri::ipc::Response::new(vec![1]));
   };
 
-  let mut chunk = chunk.to_vec();
+  if chunk.len() == 1 && chunk[0] == 1 {
+    return Ok(tauri::ipc::Response::new(chunk));
+  }
+
+  let mut chunk = chunk;
   // append a 0 byte to indicate that the body is not empty
   chunk.push(0);
 
