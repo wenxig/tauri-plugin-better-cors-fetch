@@ -257,6 +257,7 @@ export class CORSFetch {
             const combined = this.combineChunks(chunkBuffer, totalBufferedBytes.value);
             controller.enqueue(combined);
           }
+          cleanup();
           controller.close();
           return;
         }
