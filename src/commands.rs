@@ -285,6 +285,11 @@ pub async fn fetch_send<R: Runtime>(
     }
   };
 
+  {
+    let mut resources_table = webview.resources_table();
+    resources_table.close(rid)?;
+  }
+
   #[cfg(feature = "tracing")]
   tracing::trace!("{:?}", res);
 
@@ -333,6 +338,8 @@ pub async fn fetch_read_body<R: Runtime>(
   };
 
   if chunk.len() == 1 && chunk[0] == 1 {
+    let mut resources_table = webview.resources_table();
+    resources_table.close(rid)?;
     return Ok(tauri::ipc::Response::new(chunk));
   }
 
