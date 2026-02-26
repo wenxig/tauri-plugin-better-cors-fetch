@@ -131,14 +131,7 @@ fn spawn_body_streamer(response: reqwest::Response) -> StreamingResponse {
 
     while let Some(item) = stream.next().await {
       let chunk = match item {
-        Ok(chunk) => {
-          // 预分配空间，避免重新分配
-          let len = chunk.len();
-          let mut vec = Vec::with_capacity(len + 1);
-          vec.extend_from_slice(&chunk);
-          vec.push(0);
-          vec
-        }
+        Ok(chunk) => chunk.to_vec(),
         Err(_) => {
           let _ = chunk_tx.send(vec![1]).await;
           return;
@@ -335,7 +328,11 @@ pub async fn fetch_read_body<R: Runtime>(
     return Ok(tauri::ipc::Response::new(vec![1]));
   };
 
-  let mut chunk = chunk.to_vec();
+  if chunk.len() == 1 && chunk[0] == 1 {
+    return Ok(tauri::ipc::Response::new(chunk));
+  }
+
+  let mut chunk = chunk;
   // append a 0 byte to indicate that the body is not empty
   chunk.push(0);
 
