@@ -138,6 +138,16 @@ await CORSFetch.setCookieByParts('https://example.com/account/login', 'scoped', 
   maxAge: 60 * 60,
   sameSite: 'Strict',
 })
+
+// 4) Read a specific cookie value from the cookie jar
+const session = await CORSFetch.getCookie('https://example.com', 'session')
+
+// 5) Read all cookies that would be sent for this URL
+const cookies = await CORSFetch.getAllCookies('https://example.com')
+// => [{ name: 'session', value: 'abc123' }, ...]
+
+// 6) Delete a cookie by name for this URL scope
+const deleted = await CORSFetch.deleteCookie('https://example.com', 'session')
 ```
 
 ## Limitations

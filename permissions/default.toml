@@ -8,5 +8,8 @@ permissions = [
   "allow-fetch-read-body",
   "allow-fetch-cancel-body",
   "allow-prepare-requester",
-  "allow-set-cookie"
+  "allow-set-cookie",
+  "allow-get-cookie",
+  "allow-get-all-cookies",
+  "allow-delete-cookie"
 ]

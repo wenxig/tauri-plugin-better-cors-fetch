@@ -211,6 +211,21 @@ var CORSFetch = class CORSFetch {
 			content
 		} });
 	}
+	static getCookie(url, name) {
+		return invoke("plugin:cors-fetch|get_cookie", { config: {
+			url: String(url),
+			name
+		} });
+	}
+	static getAllCookies(url) {
+		return invoke("plugin:cors-fetch|get_all_cookies", { config: { url: String(url) } });
+	}
+	static deleteCookie(url, name) {
+		return invoke("plugin:cors-fetch|delete_cookie", { config: {
+			url: String(url),
+			name
+		} });
+	}
 	static setCookieByParts(url, name, value, options = {}) {
 		const segments = [`${name}=${value}`];
 		if (options.domain) segments.push(`Domain=${options.domain}`);
@@ -346,6 +361,7 @@ var CORSFetch = class CORSFetch {
 						const combined = this.combineChunks(chunkBuffer, totalBufferedBytes.value);
 						controller.enqueue(combined);
 					}
+					cleanup();
 					controller.close();
 					return;
 				}

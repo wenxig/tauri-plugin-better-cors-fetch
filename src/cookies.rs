@@ -106,6 +106,37 @@ impl CookieStoreMutex {
       .replace(CancellableTask(task));
     Ok(rx)
   }
+
+  pub fn get_cookie_value(&self, url: &url::Url, name: &str) -> Option<String> {
+    self
+      .store
+      .lock()
+      .expect("poisoned cookie jar mutex")
+      .get_request_values(url)
+      .find_map(|(cookie_name, cookie_value)| (cookie_name == name).then(|| cookie_value.into()))
+  }
+
+  pub fn get_all_cookie_values(&self, url: &url::Url) -> Vec<(String, String)> {
+    self
+      .store
+      .lock()
+      .expect("poisoned cookie jar mutex")
+      .get_request_values(url)
+      .map(|(cookie_name, cookie_value)| (cookie_name.into(), cookie_value.into()))
+      .collect()
+  }
+
+  pub fn delete_cookie(&self, url: &url::Url, name: &str) -> cookie_store::Result<bool> {
+    let mut store = self.store.lock().expect("poisoned cookie jar mutex");
+    let removed = store.remove(url, name, "").is_some();
+    drop(store);
+
+    if removed {
+      self.request_save()?;
+    }
+
+    Ok(removed)
+  }
 }
 
 impl reqwest::cookie::CookieStore for CookieStoreMutex {

@@ -36,6 +36,12 @@ type ClientConfig = {
   userAgent: string | null;
 };
 //#endregion
+//#region src-web/types/CookieEntry.d.ts
+type CookieEntry = {
+  name: string;
+  value: string;
+};
+//#endregion
 //#region src-web/index.d.ts
 declare global {
   interface Window {
@@ -64,6 +70,9 @@ type CORSFetchInit = RequestInit & Partial<CORSFetchConfig["request"]>;
 declare class CORSFetch {
   static init(config?: DeepPartial<CORSFetchConfig>, inject?: boolean): CORSFetch;
   static setCookie(url: string | URL, content: string): Promise<void>;
+  static getCookie(url: string | URL, name: string): Promise<string | null>;
+  static getAllCookies(url: string | URL): Promise<CookieEntry[]>;
+  static deleteCookie(url: string | URL, name: string): Promise<boolean>;
   static setCookieByParts(url: string | URL, name: string, value: string, options?: CookieOptions): Promise<void>;
   protected constructor(inject?: boolean, config?: DeepPartial<CORSFetchConfig>);
   private _streamConfig;
