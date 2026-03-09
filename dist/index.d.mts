@@ -47,8 +47,8 @@ declare global {
   interface Window {
     CORSFetch?: CORSFetch;
     fetchNative: typeof fetch;
-    fetchCORS: (input: Parameters<typeof fetch>[0], init: CORSFetchInit) => ReturnType<CORSFetch["fetch"]>;
-    fetch: CORSFetch["fetch"];
+    fetchCORS: (input: Parameters<typeof fetch>[0], init: CORSFetchInit) => ReturnType<CORSFetch['fetch']>;
+    fetch: CORSFetch['fetch'];
   }
 }
 interface CORSFetchConfig {
@@ -63,10 +63,10 @@ interface CookieOptions {
   maxAge?: number;
   secure?: boolean;
   httpOnly?: boolean;
-  sameSite?: "Strict" | "Lax" | "None";
+  sameSite?: 'Strict' | 'Lax' | 'None';
 }
 type DeepPartial<T> = { [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P] };
-type CORSFetchInit = RequestInit & Partial<CORSFetchConfig["request"]>;
+type CORSFetchInit = RequestInit & Partial<CORSFetchConfig['request']>;
 declare class CORSFetch {
   static init(config?: DeepPartial<CORSFetchConfig>, inject?: boolean): CORSFetch;
   static setCookie(url: string | URL, content: string): Promise<void>;

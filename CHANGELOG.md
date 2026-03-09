@@ -1,3 +1,22 @@
+# [1.1.0](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/compare/1.0.0...1.1.0) (2026-03-09)
+
+
+### Bug Fixes
+
+* avoid injecting control bytes into streamed response body ([6684183](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/commit/66841838d3e41a7ca5dc597a648d7f91b85bcc2c))
+* avoid injecting control bytes into streamed response body ([0a86430](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/commit/0a8643010377c72f2d23e74f7143e56e047c15b8))
+* close fetch resources on success and stream completion ([#5](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/issues/5)) ([7ef2551](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/commit/7ef2551bc84e3238a67930d725c1669ca4bbfb05))
+* synchronize fetch resources to prevent invalid rid in streaming ([3096277](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/commit/309627713238043f7f00d62baee687ee8a836b13))
+* synchronize fetch resources to prevent invalid rid in streaming ([#4](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/issues/4)) ([b423762](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/commit/b4237629016c356e5f82f6ab8e07295accb71122))
+
+
+### Features
+
+* add cookie get/getAll/delete APIs ([1b4a786](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/commit/1b4a786502c03af29d26a2920f44433a1ca87b4a))
+* Add cookie helper APIs and README docs for cookie management ([bf6d115](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/commit/bf6d1153810159383d5311968796fa2fa5925f39))
+* add typed cookie builder API and usage docs ([0888998](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/commit/0888998d23ae894d317f64e024abbf4587380deb))
+* better cookie manger [pub] ([d5497cf](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/commit/d5497cf4a99e1ebe5b6e29441362e3f10f78fcb3))
+
 # 1.0.0 (2026-02-24)
 
 ### Bug Fixes
