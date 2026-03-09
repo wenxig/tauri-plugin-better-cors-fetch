@@ -423,7 +423,6 @@ pub async fn set_cookie<R: Runtime>(
   {
     let _ = (&state, &config);
   }
-
   Ok(())
 }
 
@@ -445,9 +444,8 @@ pub async fn get_cookie<R: Runtime>(
   #[cfg(not(feature = "cookies"))]
   {
     let _ = (&state, &config);
+    Ok(())
   }
-
-  Ok(None)
 }
 
 #[command]
@@ -470,9 +468,8 @@ pub async fn get_all_cookies<R: Runtime>(
   #[cfg(not(feature = "cookies"))]
   {
     let _ = (&state, &config);
+    Ok(Vec::new())
   }
-
-  Ok(Vec::new())
 }
 
 #[command]
@@ -489,7 +486,6 @@ pub async fn delete_cookie<R: Runtime>(
   #[cfg(not(feature = "cookies"))]
   {
     let _ = (&state, &config);
+    Ok(true)
   }
-
-  Ok(false)
 }

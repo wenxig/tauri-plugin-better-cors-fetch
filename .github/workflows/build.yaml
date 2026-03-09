@@ -20,25 +20,17 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10.30.0
-
       - name: Use Node.js
         uses: actions/setup-node@v6
         with:
           node-version: 25
           registry-url: 'https://registry.npmjs.org'
 
-      # - name: Setup Rust
-      #   uses: dtolnay/rust-toolchain@stable
+      - name: Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile
-          # sudo apt-get install libglib2.0
+        run: bun install
 
       # build
       - name: Change version
@@ -47,20 +39,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IS_DUR_RUN: true
         run: |
-          OLD_VERSION="$(node ./script/update-version.mts)"
+          OLD_VERSION="$(bun ./script/update-version.mts)"
           echo "old_version=$OLD_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Build
         run: |
           # cargo test
-          pnpm run build || true
-
-      - name: Restore version
-        run: |
-          node ./script/set-version.mts ${{ steps.set-version.outputs.old_version }}
+          bun run build
 
       #publish
       - name: Run semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pnpm exec semantic-release
+        run: |
+          npm exec semantic-release

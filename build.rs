@@ -6,6 +6,9 @@ const COMMANDS: &[&str] = &[
   "fetch_cancel_body",
   "prepare_requester",
   "set_cookie",
+  "get_cookie",
+  "get_all_cookies",
+  "delete_cookie"
 ];
 
 fn main() {

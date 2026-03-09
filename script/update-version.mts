@@ -4,6 +4,7 @@ import semantic from 'semantic-release'
 
 import config from '../.releaserc.mjs'
 import pkg from '../package.json' with { type: 'json' }
+
 import { setVersion } from './set-version.mts'
 
 const file = fs.createWriteStream('./log.log')

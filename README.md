@@ -108,7 +108,7 @@ You can set cookies from TS by calling `CORSFetch.setCookie(url, content)` where
 // Apply to the apex domain and all subdomains.
 await CORSFetch.setCookie(
   'https://example.com',
-  'session=abc123; Domain=example.com; Path=/; Secure; HttpOnly; SameSite=Lax',
+  'session=abc123; Domain=example.com; Path=/; Secure; HttpOnly; SameSite=Lax'
 )
 ```
 
@@ -121,7 +121,7 @@ For convenience, you can also build cookies by parts:
 await CORSFetch.setCookieByParts('https://example.com', 'hostOnly', '1', {
   path: '/',
   secure: true,
-  sameSite: 'Lax',
+  sameSite: 'Lax'
 })
 
 // 2) Whole-site + subdomain cookie
@@ -129,14 +129,14 @@ await CORSFetch.setCookieByParts('https://example.com', 'allSite', '1', {
   domain: 'example.com',
   path: '/',
   secure: true,
-  sameSite: 'Lax',
+  sameSite: 'Lax'
 })
 
 // 3) More granular scope
 await CORSFetch.setCookieByParts('https://example.com/account/login', 'scoped', '1', {
   path: '/account',
   maxAge: 60 * 60,
-  sameSite: 'Strict',
+  sameSite: 'Strict'
 })
 
 // 4) Read a specific cookie value from the cookie jar

@@ -128,7 +128,7 @@ impl CookieStoreMutex {
 
   pub fn delete_cookie(&self, url: &url::Url, name: &str) -> cookie_store::Result<bool> {
     let mut store = self.store.lock().expect("poisoned cookie jar mutex");
-    let removed = store.remove(url, name, "").is_some();
+    let removed = store.remove(url.as_str(), name, "").is_some();
     drop(store);
 
     if removed {

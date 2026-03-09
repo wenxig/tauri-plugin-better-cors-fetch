@@ -1,14 +1,34 @@
-/.vs
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+node_modules
 .DS_Store
-.Thumbs.db
-*.sublime*
-.idea/
-debug.log
-package-lock.json
-.vscode/settings.json
+dist
+dev-dist
+dist-ssr
+target
+coverage
+*.local
+*.local.*
+debug
+release
 
-/.tauri
-/target
-Cargo.lock
-node_modules/
-temp
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+.vercel
+
+.wrangler

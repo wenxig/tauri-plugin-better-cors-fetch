@@ -1,7 +1,8 @@
-import { defineConfig } from "tsdown";
+import { defineConfig } from 'tsdown'
 
 export default defineConfig({
-  entry: "./src-web/index.ts",
+  entry: './src-web/index.ts',
   noExternal: () => true,
   inlineOnly: false,
-});
+  dts: { tsgo: true }
+})

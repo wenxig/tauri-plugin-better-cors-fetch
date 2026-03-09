@@ -36,6 +36,10 @@ pub enum Error {
   Utf8(#[from] std::string::FromUtf8Error),
   #[error("Invalid header value: contains non-UTF-8 characters")]
   InvalidHeaderValue,
+  #[error(transparent)]
+  Cookie(#[from] cookie_store::CookieError),
+  #[error(transparent)]
+  CookieStore(#[from] cookie_store::Error),
 }
 
 impl Serialize for Error {
