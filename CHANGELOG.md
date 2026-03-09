@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/compare/1.1.0...1.1.1) (2026-03-09)
+
+
+### Bug Fixes
+
+* rust version [pub] ([ff0715c](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/commit/ff0715cc394ee3b7426fd8d83c7cbdcc99c6fe74))
+
 # [1.1.0](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/compare/1.0.0...1.1.0) (2026-03-09)
 
 
