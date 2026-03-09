@@ -11,6 +11,9 @@ Allows all fetch operations
 - `allow-fetch-cancel-body`
 - `allow-prepare-requester`
 - `allow-set-cookie`
+- `allow-get-cookie`
+- `allow-get-all-cookies`
+- `allow-delete-cookie`
 
 ## Permission Table
 
@@ -20,6 +23,31 @@ Allows all fetch operations
 <th>Description</th>
 </tr>
 
+<tr>
+<td>
+
+`better-cors-fetch:allow-delete-cookie`
+
+</td>
+<td>
+
+Enables the delete_cookie command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`better-cors-fetch:deny-delete-cookie`
+
+</td>
+<td>
+
+Denies the delete_cookie command without any pre-configured scope.
+
+</td>
+</tr>
 
 <tr>
 <td>
@@ -147,6 +175,58 @@ Enables the fetch_send command without any pre-configured scope.
 <td>
 
 Denies the fetch_send command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`better-cors-fetch:allow-get-all-cookies`
+
+</td>
+<td>
+
+Enables the get_all_cookies command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`better-cors-fetch:deny-get-all-cookies`
+
+</td>
+<td>
+
+Denies the get_all_cookies command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`better-cors-fetch:allow-get-cookie`
+
+</td>
+<td>
+
+Enables the get_cookie command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`better-cors-fetch:deny-get-cookie`
+
+</td>
+<td>
+
+Denies the get_cookie command without any pre-configured scope.
 
 </td>
 </tr>

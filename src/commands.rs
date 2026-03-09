@@ -95,6 +95,40 @@ pub struct SetCookieConfig {
   content: String,
 }
 
+#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct GetCookieConfig {
+  #[ts(type = "string")]
+  url: url::Url,
+  name: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct GetAllCookiesConfig {
+  #[ts(type = "string")]
+  url: url::Url,
+}
+
+#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DeleteCookieConfig {
+  #[ts(type = "string")]
+  url: url::Url,
+  name: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct CookieEntry {
+  name: String,
+  value: String,
+}
+
 fn create_request_channels() -> (
   ResponseReceiver,
   Sender<ResponseResult>,
@@ -391,4 +425,71 @@ pub async fn set_cookie<R: Runtime>(
   }
 
   Ok(())
+}
+
+#[command]
+pub async fn get_cookie<R: Runtime>(
+  _webview: Webview<R>,
+  state: State<'_, Http>,
+  config: GetCookieConfig,
+) -> crate::Result<Option<String>> {
+  #[cfg(feature = "cookies")]
+  {
+    return Ok(
+      state
+        .cookies_jar
+        .get_cookie_value(&config.url, &config.name),
+    );
+  }
+
+  #[cfg(not(feature = "cookies"))]
+  {
+    let _ = (&state, &config);
+  }
+
+  Ok(None)
+}
+
+#[command]
+pub async fn get_all_cookies<R: Runtime>(
+  _webview: Webview<R>,
+  state: State<'_, Http>,
+  config: GetAllCookiesConfig,
+) -> crate::Result<Vec<CookieEntry>> {
+  #[cfg(feature = "cookies")]
+  {
+    let cookies = state.cookies_jar.get_all_cookie_values(&config.url);
+    return Ok(
+      cookies
+        .into_iter()
+        .map(|(name, value)| CookieEntry { name, value })
+        .collect(),
+    );
+  }
+
+  #[cfg(not(feature = "cookies"))]
+  {
+    let _ = (&state, &config);
+  }
+
+  Ok(Vec::new())
+}
+
+#[command]
+pub async fn delete_cookie<R: Runtime>(
+  _webview: Webview<R>,
+  state: State<'_, Http>,
+  config: DeleteCookieConfig,
+) -> crate::Result<bool> {
+  #[cfg(feature = "cookies")]
+  {
+    return Ok(state.cookies_jar.delete_cookie(&config.url, &config.name)?);
+  }
+
+  #[cfg(not(feature = "cookies"))]
+  {
+    let _ = (&state, &config);
+  }
+
+  Ok(false)
 }

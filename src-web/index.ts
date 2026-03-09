@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { isString, merge } from "es-toolkit";
 
 import { ClientConfig } from "./types/ClientConfig";
+import type { CookieEntry } from "./types/CookieEntry";
 import type { ContentConfig } from "./types/ContentConfig";
 
 declare global {
@@ -48,6 +49,24 @@ export class CORSFetch {
   public static setCookie(url: string | URL, content: string) {
     return invoke<void>("plugin:cors-fetch|set_cookie", {
       config: { url: String(url), content },
+    });
+  }
+
+  public static getCookie(url: string | URL, name: string) {
+    return invoke<string | null>("plugin:cors-fetch|get_cookie", {
+      config: { url: String(url), name },
+    });
+  }
+
+  public static getAllCookies(url: string | URL) {
+    return invoke<CookieEntry[]>("plugin:cors-fetch|get_all_cookies", {
+      config: { url: String(url) },
+    });
+  }
+
+  public static deleteCookie(url: string | URL, name: string) {
+    return invoke<boolean>("plugin:cors-fetch|delete_cookie", {
+      config: { url: String(url), name },
     });
   }
 
