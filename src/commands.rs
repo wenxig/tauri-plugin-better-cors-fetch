@@ -447,7 +447,7 @@ pub struct CookieEntry {
 }
 
 #[command]
-pub async fn get_all_domain_cookie<R: Runtime>(
+pub async fn get_all_domain_cookies<R: Runtime>(
   _webview: Webview<R>,
   state: State<'_, Http>,
   config: GetAllDomainCookiesConfig,
@@ -477,7 +477,7 @@ pub async fn get_all_domain_cookie<R: Runtime>(
 }
 
 #[command]
-pub async fn get_all_cookie<R: Runtime>(
+pub async fn get_all_cookies<R: Runtime>(
   _webview: Webview<R>,
   state: State<'_, Http>,
 ) -> crate::Result<Vec<CookieEntry>> {
