@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/compare/1.2.1...1.2.2) (2026-03-10)
+
+
+### Bug Fixes
+
+* rust fn name error [pub] ([4081957](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/commit/4081957539800628be9fcd5df7d7310eb5b8a3af))
+
 ## [1.2.1](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/compare/1.2.0...1.2.1) (2026-03-10)
 
 
