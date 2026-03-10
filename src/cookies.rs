@@ -6,7 +6,7 @@
 
 use std::{
   path::PathBuf,
-  sync::{mpsc::Receiver, Mutex},
+  sync::{Mutex, mpsc::Receiver},
 };
 
 use bytes::Bytes;
@@ -116,19 +116,46 @@ impl CookieStoreMutex {
       .find_map(|(cookie_name, cookie_value)| (cookie_name == name).then(|| cookie_value.into()))
   }
 
-  pub fn get_all_cookie_values(&self, url: &url::Url) -> Vec<(String, String)> {
+  pub fn get_all_domain_cookie_values(&self, url: &url::Url) -> Vec<(String, String, String)> {
     self
       .store
       .lock()
       .expect("poisoned cookie jar mutex")
-      .get_request_values(url)
-      .map(|(cookie_name, cookie_value)| (cookie_name.into(), cookie_value.into()))
+      .get_request_values(&url)
+      .map(|(cookie_name, cookie_value)| {
+        (
+          url.to_string().into(),
+          cookie_name.into(),
+          cookie_value.into(),
+        )
+      })
       .collect()
   }
 
-  pub fn delete_cookie(&self, url: &url::Url, name: &str) -> cookie_store::Result<bool> {
+  pub fn get_all_cookie_values(&self) -> Vec<(String, String, String)> {
+    self
+      .store
+      .lock()
+      .expect("poisoned cookie jar mutex")
+      .iter_any()
+      .map(|cookie| {
+        (
+          cookie.domain().unwrap_or("").into(),
+          cookie.name().into(),
+          cookie.value().into(),
+        )
+      })
+      .collect()
+  }
+
+  pub fn delete_cookie(
+    &self,
+    url: &url::Url,
+    path: &str,
+    name: &str,
+  ) -> cookie_store::Result<bool> {
     let mut store = self.store.lock().expect("poisoned cookie jar mutex");
-    let removed = store.remove(url.as_str(), name, "").is_some();
+    let removed = store.remove(url.as_str(), path, name).is_some();
     drop(store);
 
     if removed {
@@ -136,6 +163,16 @@ impl CookieStoreMutex {
     }
 
     Ok(removed)
+  }
+
+  pub fn clear_cookie(&self) -> cookie_store::Result<()> {
+    let mut store = self.store.lock().expect("poisoned cookie jar mutex");
+    store.clear();
+    drop(store);
+
+    self.request_save()?;
+
+    Ok(())
   }
 }
 

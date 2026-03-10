@@ -8,7 +8,9 @@ const COMMANDS: &[&str] = &[
   "set_cookie",
   "get_cookie",
   "get_all_cookies",
-  "delete_cookie"
+  "get_all_domain_cookies",
+  "delete_cookie",
+  "clear_cookie"
 ];
 
 fn main() {

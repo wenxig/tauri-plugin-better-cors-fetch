@@ -23,6 +23,33 @@ Allows all fetch operations
 <th>Description</th>
 </tr>
 
+
+<tr>
+<td>
+
+`better-cors-fetch:allow-clear-cookie`
+
+</td>
+<td>
+
+Enables the clear_cookie command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`better-cors-fetch:deny-clear-cookie`
+
+</td>
+<td>
+
+Denies the clear_cookie command without any pre-configured scope.
+
+</td>
+</tr>
+
 <tr>
 <td>
 
@@ -201,6 +228,32 @@ Enables the get_all_cookies command without any pre-configured scope.
 <td>
 
 Denies the get_all_cookies command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`better-cors-fetch:allow-get-all-domain-cookies`
+
+</td>
+<td>
+
+Enables the get_all_domain_cookies command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`better-cors-fetch:deny-get-all-domain-cookies`
+
+</td>
+<td>
+
+Denies the get_all_domain_cookies command without any pre-configured scope.
 
 </td>
 </tr>

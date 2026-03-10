@@ -56,16 +56,24 @@ export class CORSFetch {
     })
   }
 
-  public static getAllCookies(url: string | URL) {
-    return invoke<CookieEntry[]>('plugin:cors-fetch|get_all_cookies', {
+  public static getAllDomainCookies(url: string | URL) {
+    return invoke<CookieEntry[]>('plugin:cors-fetch|get_all_domain_cookies', {
       config: { url: String(url) }
     })
+  }
+
+  public static getAllCookies() {
+    return invoke<CookieEntry[]>('plugin:cors-fetch|get_all_cookies')
   }
 
   public static deleteCookie(url: string | URL, name: string) {
     return invoke<boolean>('plugin:cors-fetch|delete_cookie', {
       config: { url: String(url), name }
     })
+  }
+
+  public static clearCookie() {
+    return invoke<void>('plugin:cors-fetch|clear_cookie')
   }
 
   public static setCookieByParts(

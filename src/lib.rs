@@ -95,8 +95,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
       commands::prepare_requester,
       commands::set_cookie,
       commands::get_cookie,
-      commands::get_all_cookies,
-      commands::delete_cookie
+      commands::get_all_cookie,
+      commands::get_all_domain_cookie,
+      commands::delete_cookie,
+      commands::clear_cookie,
     ])
     .build()
 }

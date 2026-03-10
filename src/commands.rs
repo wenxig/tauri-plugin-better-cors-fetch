@@ -3,26 +3,27 @@
 // SPDX-License-Identifier: MIT
 
 use crate::{
-  headers::create_headers,
-  request::{self, get_requester, ContentConfig},
   Error, Http, Result,
+  headers::create_headers,
+  request::{self, ContentConfig, get_requester},
 };
 use futures_util::StreamExt;
-use http::{header, Method, StatusCode};
+use http::{Method, StatusCode, header};
 #[cfg(feature = "cookies")]
 use reqwest::cookie::CookieStore;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-use tauri::{command, Manager, ResourceId, ResourceTable, Runtime, State, Webview};
+use tauri::{Manager, ResourceId, ResourceTable, Runtime, State, Webview, command};
 use tokio::{
   sync::{
-    mpsc,
+    Mutex, mpsc,
     oneshot::{self, Sender},
-    Mutex,
   },
   task::JoinHandle,
 };
 use tracing::Level;
+#[warn(unused_imports)]
+use tracing::warn;
 
 const DEFAULT_BODY_CHUNK_CHANNEL_CAPACITY: usize = 32;
 const LARGE_BODY_CHUNK_CHANNEL_CAPACITY: usize = 64;
@@ -86,49 +87,6 @@ pub struct FetchResponse {
   rid: ResourceId,
 }
 
-#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct SetCookieConfig {
-  #[ts(type = "string")]
-  url: url::Url,
-  content: String,
-}
-
-#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct GetCookieConfig {
-  #[ts(type = "string")]
-  url: url::Url,
-  name: String,
-}
-
-#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct GetAllCookiesConfig {
-  #[ts(type = "string")]
-  url: url::Url,
-}
-
-#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct DeleteCookieConfig {
-  #[ts(type = "string")]
-  url: url::Url,
-  name: String,
-}
-
-#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
-#[serde(rename_all = "camelCase")]
-#[ts(export)]
-pub struct CookieEntry {
-  name: String,
-  value: String,
-}
-
 fn create_request_channels() -> (
   ResponseReceiver,
   Sender<ResponseResult>,
@@ -140,18 +98,21 @@ fn create_request_channels() -> (
   (response_rx, response_tx, abort_tx, abort_rx)
 }
 
+#[inline]
 fn spawn_request_sender(request: reqwest::RequestBuilder, response_tx: Sender<ResponseResult>) {
   tauri::async_runtime::spawn(async move {
     let _ = response_tx.send(request.send().await.map_err(Into::into));
   });
 }
 
+#[inline]
 fn spawn_static_response_sender(response: reqwest::Response, response_tx: Sender<ResponseResult>) {
   tauri::async_runtime::spawn(async move {
     let _ = response_tx.send(Ok(response));
   });
 }
 
+#[inline]
 fn spawn_body_streamer(response: reqwest::Response) -> StreamingResponse {
   let capacity = response
     .content_length()
@@ -403,6 +364,15 @@ pub async fn fetch_cancel_body<R: Runtime>(
   Ok(())
 }
 
+#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct SetCookieConfig {
+  #[ts(type = "string")]
+  url: url::Url,
+  content: String,
+}
+
 #[command]
 pub async fn set_cookie<R: Runtime>(
   _webview: Webview<R>,
@@ -426,6 +396,15 @@ pub async fn set_cookie<R: Runtime>(
   Ok(())
 }
 
+#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct GetCookieConfig {
+  #[ts(type = "string")]
+  url: url::Url,
+  name: String,
+}
+
 #[command]
 pub async fn get_cookie<R: Runtime>(
   _webview: Webview<R>,
@@ -443,33 +422,97 @@ pub async fn get_cookie<R: Runtime>(
 
   #[cfg(not(feature = "cookies"))]
   {
-    let _ = (&state, &config);
+    use tracing::warn;
+
+    warn!("fail to get cookies because feature not enabled");
     Ok(())
   }
 }
 
+#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct GetAllDomainCookiesConfig {
+  #[ts(type = "string")]
+  url: url::Url,
+}
+
+#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct CookieEntry {
+  domain: String,
+  name: String,
+  value: String,
+}
+
 #[command]
-pub async fn get_all_cookies<R: Runtime>(
+pub async fn get_all_domain_cookie<R: Runtime>(
   _webview: Webview<R>,
   state: State<'_, Http>,
-  config: GetAllCookiesConfig,
+  config: GetAllDomainCookiesConfig,
 ) -> crate::Result<Vec<CookieEntry>> {
   #[cfg(feature = "cookies")]
   {
-    let cookies = state.cookies_jar.get_all_cookie_values(&config.url);
+    let cookies = state.cookies_jar.get_all_domain_cookie_values(&config.url);
     return Ok(
       cookies
         .into_iter()
-        .map(|(name, value)| CookieEntry { name, value })
+        .map(|(domain, name, value)| CookieEntry {
+          domain,
+          name,
+          value,
+        })
         .collect(),
     );
   }
 
   #[cfg(not(feature = "cookies"))]
   {
-    let _ = (&state, &config);
+    use tracing::warn;
+
+    warn!("fail to get all domain cookies because feature not enabled");
     Ok(Vec::new())
   }
+}
+
+#[command]
+pub async fn get_all_cookie<R: Runtime>(
+  _webview: Webview<R>,
+  state: State<'_, Http>,
+) -> crate::Result<Vec<CookieEntry>> {
+  #[cfg(feature = "cookies")]
+  {
+    let cookies = state.cookies_jar.get_all_cookie_values();
+    return Ok(
+      cookies
+        .into_iter()
+        .map(|(domain, name, value)| CookieEntry {
+          domain,
+          name,
+          value,
+        })
+        .collect(),
+    );
+  }
+
+  #[cfg(not(feature = "cookies"))]
+  {
+    use tracing::warn;
+
+    warn!("fail to get all domain cookies because feature not enabled");
+    Ok(Vec::new())
+  }
+}
+
+#[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
+#[serde(rename_all = "camelCase")]
+#[ts(export)]
+pub struct DeleteCookieConfig {
+  #[ts(type = "string")]
+  url: url::Url,
+  path: Option<String>,
+  name: String,
 }
 
 #[command]
@@ -480,12 +523,38 @@ pub async fn delete_cookie<R: Runtime>(
 ) -> crate::Result<bool> {
   #[cfg(feature = "cookies")]
   {
-    return Ok(state.cookies_jar.delete_cookie(&config.url, &config.name)?);
+    return Ok(state.cookies_jar.delete_cookie(
+      &config.url,
+      &config.path.unwrap_or("/".to_string()),
+      &config.name,
+    )?);
   }
 
   #[cfg(not(feature = "cookies"))]
   {
-    let _ = (&state, &config);
+    use tracing::warn;
+
+    warn!("fail to delete cookies because feature not enabled");
     Ok(true)
+  }
+}
+
+
+#[command]
+pub async fn clear_cookie<R: Runtime>(
+  _webview: Webview<R>,
+  state: State<'_, Http>,
+) -> crate::Result<()> {
+  #[cfg(feature = "cookies")]
+  {
+    return Ok(state.cookies_jar.clear_cookie()?);
+  }
+
+  #[cfg(not(feature = "cookies"))]
+  {
+    use tracing::warn;
+
+    warn!("fail to clear cookies because feature not enabled");
+    Ok(())
   }
 }
