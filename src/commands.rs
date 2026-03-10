@@ -8,7 +8,7 @@ use crate::{
   request::{self, ContentConfig, get_requester},
 };
 use futures_util::StreamExt;
-use http::{Method, StatusCode, header};
+use http::{HeaderMap, HeaderValue, Method, StatusCode, header};
 #[cfg(feature = "cookies")]
 use reqwest::cookie::CookieStore;
 use serde::{Deserialize, Serialize};
@@ -77,8 +77,9 @@ impl AddRequest for ResourceTable {
   }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
+#[ts(export)]
 pub struct FetchResponse {
   status: u16,
   status_text: String,
@@ -287,14 +288,13 @@ pub async fn fetch_send<R: Runtime>(
 
   #[cfg(feature = "tracing")]
   tracing::trace!("{:?}", res);
-
-  let status = res.status();
-  let url = res.url().to_string();
-  let headers_len = res.headers().len();
-  let mut headers = Vec::with_capacity(headers_len);
+  let status: StatusCode = res.status();
+  let url: String = res.url().to_string();
+  let headers_raw: &HeaderMap<HeaderValue> = res.headers();
+  let mut headers: Vec<(String, String)> = Vec::with_capacity(headers_raw.len());
 
   // 预先估计总字符串大小，减少重新分配
-  for (key, val) in res.headers().iter() {
+  for (key, val) in headers_raw.into_iter() {
     let value_str = val.to_str().map_err(|_| Error::InvalidHeaderValue)?;
 
     // 只在必要时分配，可以考虑使用Cow<str>
@@ -538,7 +538,6 @@ pub async fn delete_cookie<R: Runtime>(
     Ok(true)
   }
 }
-
 
 #[command]
 pub async fn clear_cookie<R: Runtime>(

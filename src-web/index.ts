@@ -4,6 +4,7 @@ import { isString, merge } from 'es-toolkit'
 import { ClientConfig } from './types/ClientConfig'
 import type { ContentConfig } from './types/ContentConfig'
 import type { CookieEntry } from './types/CookieEntry'
+import type { FetchResponse } from './types/FetchResponse'
 
 declare global {
   interface Window {
@@ -156,8 +157,8 @@ export class CORSFetch {
         : (init?.signal ?? input.signal)
     if (signal?.aborted) throw this.cancel_error
 
-    let rid: string | null = null
-    let responseRid: string | null = null
+    let rid: number | null = null
+    let responseRid: number | null = null
 
     const cleanup = () => {
       signal?.removeEventListener('abort', onAbort)
@@ -200,13 +201,7 @@ export class CORSFetch {
         url,
         headers: responseHeaders,
         rid: _rid
-      } = await invoke<{
-        statusText: string
-        url: string
-        rid: string
-        headers: Record<string, string>
-        status: number
-      }>('plugin:cors-fetch|fetch_send', { rid })
+      } = await invoke<FetchResponse>('plugin:cors-fetch|fetch_send', { rid })
       responseRid = _rid
 
       if (signal?.aborted) throw this.cancel_error
@@ -255,7 +250,7 @@ export class CORSFetch {
       signal?: AbortSignal | null
       chunkBuffer: Uint8Array[]
       totalBufferedBytes: { value: number }
-      responseRid: string | null
+      responseRid: number | null
       cleanup: () => void
     },
     controller: ReadableStreamDefaultController
