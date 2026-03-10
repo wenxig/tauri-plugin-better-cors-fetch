@@ -75,14 +75,20 @@ var CORSFetch = class CORSFetch {
 			name
 		} });
 	}
-	static getAllCookies(url) {
-		return invoke("plugin:cors-fetch|get_all_cookies", { config: { url: String(url) } });
+	static getAllDomainCookies(url) {
+		return invoke("plugin:cors-fetch|get_all_domain_cookies", { config: { url: String(url) } });
+	}
+	static getAllCookies() {
+		return invoke("plugin:cors-fetch|get_all_cookies");
 	}
 	static deleteCookie(url, name) {
 		return invoke("plugin:cors-fetch|delete_cookie", { config: {
 			url: String(url),
 			name
 		} });
+	}
+	static clearCookie() {
+		return invoke("plugin:cors-fetch|clear_cookie");
 	}
 	static setCookieByParts(url, name, value, options = {}) {
 		const segments = [`${name}=${value}`];

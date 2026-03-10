@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/compare/1.1.1...1.2.0) (2026-03-10)
+
+
+### Features
+
+* [pub] more cookie utils ([6b92271](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/commit/6b922711178afbd7973b5ca8e72a6724dc752f14))
+
 ## [1.1.1](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/compare/1.1.0...1.1.1) (2026-03-09)
 
 
