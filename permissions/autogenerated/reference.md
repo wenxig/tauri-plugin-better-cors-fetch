@@ -14,6 +14,7 @@ Allows all fetch operations
 - `allow-get-cookie`
 - `allow-get-all-cookies`
 - `allow-delete-cookie`
+- ``
 
 ## Permission Table
 
