@@ -1,3 +1,10 @@
+## [1.2.4](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/compare/1.2.3...1.2.4) (2026-03-11)
+
+
+### Bug Fixes
+
+* permissions not set [pub] ([5f5b75c](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/commit/5f5b75caf8a31f5ba62690b65afa9ea429789bcb))
+
 ## [1.2.3](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/compare/1.2.2...1.2.3) (2026-03-11)
 
 
