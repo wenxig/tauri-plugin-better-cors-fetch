@@ -1,3 +1,10 @@
+## [1.2.3](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/compare/1.2.2...1.2.3) (2026-03-11)
+
+
+### Bug Fixes
+
+* [pub] delete in ts call p not right ([bfeb373](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/commit/bfeb373aff9ea6832cb9946e9e479eacc0c641bd))
+
 ## [1.2.2](https://github.com/delta-comic/tauri-plugin-better-cors-fetch/compare/1.2.1...1.2.2) (2026-03-10)
 
 

@@ -74,7 +74,7 @@ declare class CORSFetch {
   static getCookie(url: string | URL, name: string): Promise<string | null>;
   static getAllDomainCookies(url: string | URL): Promise<CookieEntry[]>;
   static getAllCookies(): Promise<CookieEntry[]>;
-  static deleteCookie(url: string | URL, name: string): Promise<boolean>;
+  static deleteCookie(url: string | URL, path: string | undefined, name: string): Promise<boolean>;
   static clearCookie(): Promise<void>;
   static setCookieByParts(url: string | URL, name: string, value: string, options?: CookieOptions): Promise<void>;
   protected constructor(inject?: boolean, config?: DeepPartial<CORSFetchConfig>);

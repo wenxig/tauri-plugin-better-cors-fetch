@@ -81,10 +81,11 @@ var CORSFetch = class CORSFetch {
 	static getAllCookies() {
 		return invoke("plugin:cors-fetch|get_all_cookies");
 	}
-	static deleteCookie(url, name) {
+	static deleteCookie(url, path = "/", name) {
 		return invoke("plugin:cors-fetch|delete_cookie", { config: {
-			url: String(url),
-			name
+			url: url.toString(),
+			name,
+			path
 		} });
 	}
 	static clearCookie() {
