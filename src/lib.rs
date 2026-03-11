@@ -23,6 +23,7 @@ mod commands;
 mod cookies;
 mod error;
 mod headers;
+mod spawner;
 
 #[cfg(feature = "cookies")]
 const COOKIES_FILENAME: &str = ".cookies";
@@ -87,18 +88,18 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
       }
     })
     .invoke_handler(tauri::generate_handler![
-      commands::fetch,
-      commands::fetch_cancel,
-      commands::fetch_send,
-      commands::fetch_read_body,
-      commands::fetch_cancel_body,
-      commands::prepare_requester,
-      commands::set_cookie,
-      commands::get_cookie,
-      commands::get_all_cookies,
-      commands::get_all_domain_cookies,
-      commands::delete_cookie,
-      commands::clear_cookie,
+      commands::fetch::fetch,
+      commands::fetch::fetch_cancel,
+      commands::fetch::fetch_send,
+      commands::fetch::fetch_read_body,
+      commands::fetch::fetch_cancel_body,
+      commands::fetch::prepare_requester,
+      commands::cookie::set_cookie,
+      commands::cookie::get_cookie,
+      commands::cookie::get_all_cookies,
+      commands::cookie::get_all_domain_cookies,
+      commands::cookie::delete_cookie,
+      commands::cookie::clear_cookie,
     ])
     .build()
 }

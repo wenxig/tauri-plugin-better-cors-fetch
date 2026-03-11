@@ -4,7 +4,11 @@ import { isString, merge } from 'es-toolkit'
 import { ClientConfig } from './types/ClientConfig'
 import type { ContentConfig } from './types/ContentConfig'
 import type { CookieEntry } from './types/CookieEntry'
+import type { DeleteCookieConfig } from './types/DeleteCookieConfig'
 import type { FetchResponse } from './types/FetchResponse'
+import type { GetAllDomainCookiesConfig } from './types/GetAllDomainCookiesConfig'
+import type { GetCookieConfig } from './types/GetCookieConfig'
+import type { SetCookieConfig } from './types/SetCookieConfig'
 
 declare global {
   interface Window {
@@ -48,29 +52,27 @@ export class CORSFetch {
     return new CORSFetch(false, config)
   }
   public static setCookie(url: string | URL, content: string) {
-    return invoke<void>('plugin:cors-fetch|set_cookie', { config: { url: String(url), content } })
+    const config: SetCookieConfig = { url: String(url), content }
+    return invoke<void>('plugin:cors-fetch|set_cookie', { config })
   }
 
   public static getCookie(url: string | URL, name: string) {
-    return invoke<string | null>('plugin:cors-fetch|get_cookie', {
-      config: { url: String(url), name }
-    })
+    const config: GetCookieConfig = { url: String(url), name }
+    return invoke<string | null>('plugin:cors-fetch|get_cookie', { config })
   }
 
   public static getAllDomainCookies(url: string | URL) {
-    return invoke<CookieEntry[]>('plugin:cors-fetch|get_all_domain_cookies', {
-      config: { url: String(url) }
-    })
+    const config: GetAllDomainCookiesConfig = { url: String(url) }
+    return invoke<CookieEntry[]>('plugin:cors-fetch|get_all_domain_cookies', { config })
   }
 
   public static getAllCookies() {
     return invoke<CookieEntry[]>('plugin:cors-fetch|get_all_cookies')
   }
 
-  public static deleteCookie(url: string | URL, name: string) {
-    return invoke<boolean>('plugin:cors-fetch|delete_cookie', {
-      config: { url: String(url), name }
-    })
+  public static deleteCookie(url: string | URL, path = '/', name: string) {
+    const config: DeleteCookieConfig = { url: url.toString(), name, path }
+    return invoke<boolean>('plugin:cors-fetch|delete_cookie', { config })
   }
 
   public static clearCookie() {
