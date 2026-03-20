@@ -7,7 +7,7 @@
     "build": "bun --bun tsdown --config ./tsdown.config.ts",
     "lint": "oxlint --type-aware",
     "lint:fix": "oxlint --fix --type-aware",
-    "prepare": "husky",
+    "hk": "husky",
     "lint-staged": "lint-staged"
   },
   "repository": {
