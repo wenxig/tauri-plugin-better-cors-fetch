@@ -12,9 +12,10 @@ Allows all fetch operations
 - `allow-prepare-requester`
 - `allow-set-cookie`
 - `allow-get-cookie`
+- `allow-get-all-domain-cookies`
 - `allow-get-all-cookies`
 - `allow-delete-cookie`
-- ``
+- `allow-clear-cookie`
 
 ## Permission Table
 

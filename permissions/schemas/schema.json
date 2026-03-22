@@ -439,10 +439,10 @@
           "markdownDescription": "Denies the set_cookie command without any pre-configured scope."
         },
         {
-          "description": "Allows all fetch operations\n#### This default permission set includes:\n\n- `allow-fetch`\n- `allow-fetch-cancel`\n- `allow-fetch-send`\n- `allow-fetch-read-body`\n- `allow-fetch-cancel-body`\n- `allow-prepare-requester`\n- `allow-set-cookie`\n- `allow-get-cookie`\n- `allow-get-all-cookies`\n- `allow-delete-cookie`\n- ``",
+          "description": "Allows all fetch operations\n#### This default permission set includes:\n\n- `allow-fetch`\n- `allow-fetch-cancel`\n- `allow-fetch-send`\n- `allow-fetch-read-body`\n- `allow-fetch-cancel-body`\n- `allow-prepare-requester`\n- `allow-set-cookie`\n- `allow-get-cookie`\n- `allow-get-all-domain-cookies`\n- `allow-get-all-cookies`\n- `allow-delete-cookie`\n- `allow-clear-cookie`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Allows all fetch operations\n#### This default permission set includes:\n\n- `allow-fetch`\n- `allow-fetch-cancel`\n- `allow-fetch-send`\n- `allow-fetch-read-body`\n- `allow-fetch-cancel-body`\n- `allow-prepare-requester`\n- `allow-set-cookie`\n- `allow-get-cookie`\n- `allow-get-all-cookies`\n- `allow-delete-cookie`\n- ``"
+          "markdownDescription": "Allows all fetch operations\n#### This default permission set includes:\n\n- `allow-fetch`\n- `allow-fetch-cancel`\n- `allow-fetch-send`\n- `allow-fetch-read-body`\n- `allow-fetch-cancel-body`\n- `allow-prepare-requester`\n- `allow-set-cookie`\n- `allow-get-cookie`\n- `allow-get-all-domain-cookies`\n- `allow-get-all-cookies`\n- `allow-delete-cookie`\n- `allow-clear-cookie`"
         }
       ]
     }
