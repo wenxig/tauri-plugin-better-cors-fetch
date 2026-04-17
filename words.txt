@@ -8,6 +8,7 @@ Booter
 booters
 cdylib
 codegen
+docsrs
 Favourite
 favselect
 Gmailerrorred

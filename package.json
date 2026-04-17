@@ -1,8 +1,30 @@
 {
   "name": "tauri-plugin-better-cors-fetch",
   "version": "1.2.4",
-  "packageManager": "bun@1.3.10",
-  "readme": "./README.md",
+  "author": {
+    "name": "wenxig",
+    "email": "wenxinguo12@gmail.com",
+    "url": "https://github.com/wenxig"
+  },
+  "contributors": [
+    {
+      "name": "Del Wang",
+      "url": "https://github.com/idootop",
+      "email": "hello@xbox.work"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wenxig/tauri-plugin-better-cors-fetch.git"
+  },
+  "files": [
+    "./dist",
+    "./package.json",
+    "./README.md"
+  ],
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "scripts": {
     "build": "bun --bun tsdown --config ./tsdown.config.ts",
     "lint": "oxlint --type-aware",
@@ -10,44 +32,34 @@
     "hk": "husky",
     "lint-staged": "lint-staged"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/delta-comic/tauri-plugin-better-cors-fetch.git"
-  },
   "dependencies": {
     "@tauri-apps/api": "^2.10.1",
-    "es-toolkit": "^1.44.0"
+    "es-toolkit": "^1.45.1"
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.4.2",
-    "@commitlint/config-conventional": "^20.4.2",
-    "@commitlint/types": "^20.4.0",
-    "@cspell/dict-npm": "^5.2.35",
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "@commitlint/types": "^20.5.0",
+    "@cspell/dict-npm": "^5.2.38",
     "@cspell/dict-rust": "^4.1.2",
-    "@iarna/toml": "^2.2.5",
+    "@iarna/toml": "^3.0.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^12.0.6",
     "@semantic-release/release-notes-generator": "^14.1.0",
-    "@types/bun": "^1.3.10",
+    "@types/bun": "^1.3.12",
     "@types/iarna__toml": "^2.0.5",
-    "@typescript/native-preview": "^7.0.0-dev.20260308.1",
-    "commitlint-plugin-cspell": "^0.6.0",
-    "cspell": "^9.7.0",
+    "@typescript/native-preview": "^7.0.0-dev.20260417.1",
+    "commitlint-plugin-cspell": "^0.8.0",
+    "cspell": "^10.0.0",
     "husky": "^9.1.7",
-    "lint-staged": "^16.2.7",
-    "oxfmt": "^0.36.0",
-    "oxlint": "^1.50.0",
-    "oxlint-tsgolint": "^0.16.0",
+    "lint-staged": "^16.4.0",
+    "oxfmt": "^0.45.0",
+    "oxlint": "^1.60.0",
+    "oxlint-tsgolint": "^0.21.1",
     "semantic-release": "^25.0.3",
-    "tsdown": "^0.21.1"
+    "tsdown": "^0.21.9"
   },
-  "type": "module",
-  "types": "./dist/index.d.mts",
-  "main": "./dist/index.mjs",
-  "files": [
-    "./dist",
-    "./package.json",
-    "./README.md"
-  ]
+  "packageManager": "bun@1.3.12",
+  "readme": "./README.md"
 }

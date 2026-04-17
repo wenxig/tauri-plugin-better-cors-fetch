@@ -1,4 +1,4 @@
-use crate::Http;
+use crate::GlobalState;
 #[cfg(feature = "cookies")]
 use reqwest::cookie::CookieStore;
 use serde::{Deserialize, Serialize};
@@ -18,7 +18,7 @@ pub struct SetCookieConfig {
 #[command]
 pub async fn set_cookie<R: Runtime>(
   _webview: Webview<R>,
-  state: State<'_, Http>,
+  state: State<'_, GlobalState>,
   config: SetCookieConfig,
 ) -> crate::Result<()> {
   #[cfg(feature = "cookies")]
@@ -50,7 +50,7 @@ pub struct GetCookieConfig {
 #[command]
 pub async fn get_cookie<R: Runtime>(
   _webview: Webview<R>,
-  state: State<'_, Http>,
+  state: State<'_, GlobalState>,
   config: GetCookieConfig,
 ) -> crate::Result<Option<String>> {
   #[cfg(feature = "cookies")]
@@ -91,7 +91,7 @@ pub struct CookieEntry {
 #[command]
 pub async fn get_all_domain_cookies<R: Runtime>(
   _webview: Webview<R>,
-  state: State<'_, Http>,
+  state: State<'_, GlobalState>,
   config: GetAllDomainCookiesConfig,
 ) -> crate::Result<Vec<CookieEntry>> {
   #[cfg(feature = "cookies")]
@@ -121,7 +121,7 @@ pub async fn get_all_domain_cookies<R: Runtime>(
 #[command]
 pub async fn get_all_cookies<R: Runtime>(
   _webview: Webview<R>,
-  state: State<'_, Http>,
+  state: State<'_, GlobalState>,
 ) -> crate::Result<Vec<CookieEntry>> {
   #[cfg(feature = "cookies")]
   {
@@ -160,7 +160,7 @@ pub struct DeleteCookieConfig {
 #[command]
 pub async fn delete_cookie<R: Runtime>(
   _webview: Webview<R>,
-  state: State<'_, Http>,
+  state: State<'_, GlobalState>,
   config: DeleteCookieConfig,
 ) -> crate::Result<bool> {
   #[cfg(feature = "cookies")]
@@ -184,7 +184,7 @@ pub async fn delete_cookie<R: Runtime>(
 #[command]
 pub async fn clear_cookie<R: Runtime>(
   _webview: Webview<R>,
-  state: State<'_, Http>,
+  state: State<'_, GlobalState>,
 ) -> crate::Result<()> {
   #[cfg(feature = "cookies")]
   {

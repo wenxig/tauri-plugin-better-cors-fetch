@@ -1,13 +1,15 @@
 use crate::{
-  Error, Http, Result, headers::create_headers, request::{self, ContentConfig, get_requester}
+  Error, GlobalState, Result,
+  headers::create_headers,
+  request::{self, ContentConfig, get_requester},
 };
-use http::{header, Method, StatusCode};
+use http::{Method, StatusCode, header};
 use serde::Serialize;
 use std::{future::Future, pin::Pin, sync::Arc, time::Duration};
 use tauri::{
-  async_runtime::Mutex, command, Manager, ResourceId, ResourceTable, Runtime, State, Webview,
+  Manager, ResourceId, ResourceTable, Runtime, State, Webview, async_runtime::Mutex, command,
 };
-use tokio::sync::oneshot::{channel, Receiver, Sender};
+use tokio::sync::oneshot::{Receiver, Sender, channel};
 use tracing::Level;
 
 struct ReqwestResponse(reqwest::Response);
@@ -55,7 +57,7 @@ pub struct FetchResponse {
 #[command]
 pub fn prepare_requester<R: Runtime>(
   _: Webview<R>,
-  state: State<'_, Http>,
+  state: State<'_, GlobalState>,
   config: ContentConfig,
 ) {
   request::prepare_requester(&state, &config.client);
@@ -64,7 +66,7 @@ pub fn prepare_requester<R: Runtime>(
 #[command]
 pub async fn fetch<R: Runtime>(
   webview: Webview<R>,
-  state: State<'_, Http>,
+  state: State<'_, GlobalState>,
   content_config: ContentConfig,
 ) -> crate::Result<ResourceId> {
   if tracing::enabled!(Level::DEBUG) {

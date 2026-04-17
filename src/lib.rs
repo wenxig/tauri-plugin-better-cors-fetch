@@ -12,8 +12,8 @@ use dashmap::DashMap;
 pub use reqwest;
 use reqwest::Client;
 use tauri::{
-  plugin::{Builder, TauriPlugin},
   Manager, Runtime,
+  plugin::{Builder, TauriPlugin},
 };
 mod request;
 
@@ -27,9 +27,10 @@ mod headers;
 #[cfg(feature = "cookies")]
 const COOKIES_FILENAME: &str = ".cookies";
 
-pub(crate) struct Http {
+pub type InstanceKey = u32;
+pub(crate) struct GlobalState {
   #[cfg(feature = "cookies")]
-  cookies_jar: std::sync::Arc<crate::cookies::CookieStoreMutex>,
+  cookies_jar: DashMap<InstanceKey, std::sync::Arc<crate::cookies::CookieStoreMutex>>,
   pool: DashMap<request::ClientCacheKey, Arc<Client>>,
 }
 
@@ -58,8 +59,8 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
             .unwrap_or_else(|_e| CookieStoreMutex::new(path, Default::default()))
         };
 
-        let state = Http {
-          cookies_jar: std::sync::Arc::new(cookies_jar),
+        let state = GlobalState {
+          cookies_jar: DashMap::new(), //std::sync::Arc::new(cookies_jar),
           pool: DashMap::new(),
         };
 
@@ -72,17 +73,20 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
       #[cfg(feature = "cookies")]
       {
         if let tauri::RunEvent::Exit = event {
-          let state = app.state::<Http>();
+          let state = app.state::<GlobalState>();
 
-          match state.cookies_jar.request_save() {
-            Ok(rx) => {
-              let _ = rx.recv();
-            }
-            Err(_e) => {
-              #[cfg(feature = "tracing")]
-              tracing::error!("failed to save cookie jar: {_e}");
-            }
-          }
+          state
+            .cookies_jar
+            .iter()
+            .for_each(|jar| match jar.request_save() {
+              Ok(rx) => {
+                let _ = rx.recv();
+              }
+              Err(_e) => {
+                #[cfg(feature = "tracing")]
+                tracing::error!("failed to save cookie jar: {_e}");
+              }
+            });
         }
       }
     })

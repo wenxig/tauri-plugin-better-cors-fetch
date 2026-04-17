@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use reqwest::{redirect::Policy, Client, NoProxy};
+use reqwest::{Client, NoProxy, redirect::Policy};
 use serde::{Deserialize, Serialize};
 
-use crate::{Http, Result};
+use crate::{GlobalState, InstanceKey, Result};
 
 #[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
 #[serde(rename_all = "camelCase")]
@@ -34,6 +34,7 @@ pub struct ClientConfig {
   pub(crate) proxy: Option<Proxy>,
   pub(crate) danger: Option<DangerousSettings>,
   pub(crate) user_agent: Option<String>,
+  pub(crate) instance_key: InstanceKey,
 }
 
 #[derive(Debug, Deserialize, Serialize, ts_rs::TS)]
@@ -123,7 +124,7 @@ impl ClientCacheKey {
   }
 }
 
-fn build_requester(state: &Http, config: &ClientConfig) -> Result<Client> {
+fn build_requester(state: &GlobalState, config: &ClientConfig) -> Result<Client> {
   let mut builder = reqwest::ClientBuilder::new();
 
   if let Some(danger_config) = &config.danger {
@@ -146,13 +147,13 @@ fn build_requester(state: &Http, config: &ClientConfig) -> Result<Client> {
 
   #[cfg(feature = "cookies")]
   {
-    builder = builder.cookie_provider(state.cookies_jar.clone());
+    builder = builder.cookie_provider(state.cookies_jar.get(key).clone());
   }
   Ok(builder.build()?)
 }
 
 #[inline]
-pub fn get_requester(state: &Http, config: &ClientConfig) -> Arc<Client> {
+pub fn get_requester(state: &GlobalState, config: &ClientConfig) -> Arc<Client> {
   let cache_key = ClientCacheKey::from_config(config);
 
   state
@@ -165,7 +166,7 @@ pub fn get_requester(state: &Http, config: &ClientConfig) -> Arc<Client> {
 }
 
 #[inline]
-pub fn prepare_requester(state: &Http, config: &ClientConfig) {
+pub fn prepare_requester(state: &GlobalState, config: &ClientConfig) {
   let cache_key = ClientCacheKey::from_config(config);
   if let dashmap::mapref::entry::Entry::Vacant(entry) = state.pool.entry(cache_key) {
     if let Ok(requester) = build_requester(state, config) {

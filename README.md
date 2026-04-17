@@ -1,6 +1,6 @@
 ![tauri-plugin-cors-fetch](./banner.png)
 
-[![MIT licensed](https://img.shields.io/github/license/delta-comic/tauri-plugin-better-cors-fetch)](./LICENSE)
+[![MIT licensed](https://img.shields.io/github/license/wenxig/tauri-plugin-better-cors-fetch)](./LICENSE)
 
 An **unofficial** Tauri plugin that enables **seamless cross-origin (CORS) requests** by transparently proxying the native `fetch` API through Tauri's HTTP client.
 
@@ -20,14 +20,14 @@ An **unofficial** Tauri plugin that enables **seamless cross-origin (CORS) reque
 Install the plugin by your package manager:
 
 ```sh
-pnpm i https://github.com/delta-comic/tauri-plugin-better-cors-fetch
+pnpm i https://github.com/wenxig/tauri-plugin-better-cors-fetch
 ```
 
 Add the plugin to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-tauri-plugin-better-cors-fetch = { git = "https://github.com/delta-comic/tauri-plugin-better-cors-fetch", branch = "main" }
+tauri-plugin-better-cors-fetch = { git = "https://github.com/wenxig/tauri-plugin-better-cors-fetch", branch = "main" }
 ```
 
 ### 2. Initialize Plugin

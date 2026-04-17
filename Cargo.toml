@@ -2,19 +2,21 @@
 name = "tauri-plugin-better-cors-fetch"
 version = "1.2.4"
 description = "Enabling Cross-Origin Resource Sharing (CORS) for Fetch Requests within Tauri applications."
-keywords = [ "tauri-plugin", "CORS", "fetch", "unofficial" ]
-authors = [ "Del Wang <hello@xbox.work>" ]
-repository = "https://github.com/delta-comic/tauri-plugin-better-cors-fetch"
-documentation = "https://docs.rs/crate/tauri-plugin-cors-fetch"
+keywords = ["tauri-plugin", "CORS", "fetch", "unofficial"]
+authors = ["wenxig <wenxinguo12@gmail.com>", "Del Wang <hello@xbox.work>"]
+repository = "https://github.com/wenxig/tauri-plugin-better-cors-fetch"
+documentation = "https://docs.rs/crate/tauri-plugin-better-cors-fetch"
 license = "MIT"
+license-file = "./LICENSE"
 readme = "README.md"
 edition = "2024"
-rust-version = "1.94.0"
-links = "tauri-plugin-cors-fetch"
+rust-version = "1.95.0"
+links = "tauri-plugin-better-cors-fetch"
+publish = true
 
 [package.metadata.docs.rs]
-rustc-args = [ "--cfg", "docsrs" ]
-rustdoc-args = [ "--cfg", "docsrs" ]
+rustc-args = ["--cfg", "docsrs"]
+rustdoc-args = ["--cfg", "docsrs"]
 
 [package.metadata.platforms.support.windows]
 level = "full"
@@ -47,34 +49,34 @@ ts-rs = "12.0.1"
 dashmap = "6.1.0"
 futures-util = "0.3.32"
 
-  [dependencies.tauri]
-  version = "2.10.3"
-  default-features = false
+[dependencies.tauri]
+version = "2.10.3"
+default-features = false
 
-  [dependencies.reqwest]
-  version = "0.13.2"
-  default-features = false
+[dependencies.reqwest]
+version = "0.13.2"
+default-features = false
 
-  [dependencies.tokio]
-  version = "1.50.0"
-  features = [ "sync", "macros" ]
+[dependencies.tokio]
+version = "1.52.1"
+features = ["sync", "macros"]
 
-  [dependencies.cookie_store]
-  version = "0.22.1"
-  optional = true
-  features = [ "serde" ]
+[dependencies.cookie_store]
+version = "0.22.1"
+optional = true
+features = ["serde"]
 
-  [dependencies.bytes]
-  version = "1.11.1"
-  optional = true
+[dependencies.bytes]
+version = "1.11.1"
+optional = true
 
-  [dependencies.tracing]
-  version = "0.1"
-  optional = true
+[dependencies.tracing]
+version = "0.1"
+optional = true
 
 [build-dependencies.tauri-plugin]
 version = "2.5.4"
-features = [ "build" ]
+features = ["build"]
 
 [features]
 default = [
@@ -88,27 +90,27 @@ default = [
   "socks",
   "tracing"
 ]
-tracing = [ "dep:tracing" ]
-http2 = [ "reqwest/http2" ]
-rustls = [ "reqwest/rustls" ]
-rustls-no-provider = [ "reqwest/rustls-no-provider" ]
-native-tls = [ "reqwest/native-tls" ]
-native-tls-no-alpn = [ "reqwest/native-tls-no-alpn" ]
-native-tls-vendored = [ "reqwest/native-tls-vendored" ]
-native-tls-vendored-no-alpn = [ "reqwest/native-tls-vendored-no-alpn" ]
-blocking = [ "reqwest/blocking" ]
-charset = [ "reqwest/charset" ]
-cookies = [ "reqwest/cookies", "dep:cookie_store", "dep:bytes" ]
-gzip = [ "reqwest/gzip" ]
-brotli = [ "reqwest/brotli" ]
-zstd = [ "reqwest/zstd" ]
-deflate = [ "reqwest/deflate" ]
-query = [ "reqwest/query" ]
-form = [ "reqwest/form" ]
-json = [ "reqwest/json" ]
-multipart = [ "reqwest/multipart" ]
-hickory-dns = [ "reqwest/hickory-dns" ]
-stream = [ "reqwest/stream" ]
-socks = [ "reqwest/socks" ]
-system-proxy = [ "reqwest/system-proxy" ]
-http3 = [ "reqwest/http3" ]
+tracing = ["dep:tracing"]
+http2 = ["reqwest/http2"]
+rustls = ["reqwest/rustls"]
+rustls-no-provider = ["reqwest/rustls-no-provider"]
+native-tls = ["reqwest/native-tls"]
+native-tls-no-alpn = ["reqwest/native-tls-no-alpn"]
+native-tls-vendored = ["reqwest/native-tls-vendored"]
+native-tls-vendored-no-alpn = ["reqwest/native-tls-vendored-no-alpn"]
+blocking = ["reqwest/blocking"]
+charset = ["reqwest/charset"]
+cookies = ["reqwest/cookies", "dep:cookie_store", "dep:bytes"]
+gzip = ["reqwest/gzip"]
+brotli = ["reqwest/brotli"]
+zstd = ["reqwest/zstd"]
+deflate = ["reqwest/deflate"]
+query = ["reqwest/query"]
+form = ["reqwest/form"]
+json = ["reqwest/json"]
+multipart = ["reqwest/multipart"]
+hickory-dns = ["reqwest/hickory-dns"]
+stream = ["reqwest/stream"]
+socks = ["reqwest/socks"]
+system-proxy = ["reqwest/system-proxy"]
+http3 = ["reqwest/http3"]
