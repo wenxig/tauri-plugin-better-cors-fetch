@@ -55,6 +55,7 @@ export class CORSFetch {
     const cors = new CORSFetch(config)
     const instanceKey = cors.config.request.instanceKey
 
+    console.debug('Create cors instance.', instanceKey)
     const prepareConfig: ClientConfig = cors.config.request
     await invoke<void>('plugin:cors-fetch|prepare_requester', prepareConfig)
 
@@ -64,6 +65,7 @@ export class CORSFetch {
       window.fetch = cors.fetch.bind(cors)
       window.fetchCORS = (input, init) => cors.fetch(input, init, true)
     }
+    console.debug('Create cors instance done.', instanceKey)
     return cors
   }
   public setCookie(url: string | URL, content: string) {
