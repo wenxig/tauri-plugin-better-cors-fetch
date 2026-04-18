@@ -1,3 +1,10 @@
+## [1.3.4](https://github.com/wenxig/tauri-plugin-better-cors-fetch/compare/1.3.3...1.3.4) (2026-04-18)
+
+
+### Bug Fixes
+
+* [pub] init error ([0bcdc93](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/0bcdc9374a463d6ee08e74305dd75b7bc1e92aa1))
+
 ## [1.3.3](https://github.com/wenxig/tauri-plugin-better-cors-fetch/compare/1.3.2...1.3.3) (2026-04-18)
 
 
