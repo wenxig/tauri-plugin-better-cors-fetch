@@ -55,5 +55,5 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
         run: |
           npm publish || echo "no need to publish."
-          cargo publish || echo "no need to publish."
+          cargo publish --allow-dirty || echo "no need to publish."
           npm exec semantic-release
