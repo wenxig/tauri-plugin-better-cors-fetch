@@ -57,7 +57,7 @@ export class CORSFetch {
 
     console.debug('Create cors instance.', instanceKey)
     const prepareConfig: ClientConfig = cors.config.request
-    await invoke<void>('plugin:better-cors-fetch|prepare_requester', prepareConfig)
+    await invoke<void>('plugin:better-cors-fetch|prepare_requester', { client: prepareConfig })
 
     if (instanceKey == GLOBAL_INSTANCE_KEY && !window.CORSFetch) {
       window.CORSFetch = cors
@@ -96,7 +96,7 @@ export class CORSFetch {
 
   public getAllCookies() {
     const config: GetAllCookiesConfig = { instanceKey: this.config.request.instanceKey }
-    return invoke<CookieEntry[]>('plugin:better-cors-fetch|get_all_cookies', config)
+    return invoke<CookieEntry[]>('plugin:better-cors-fetch|get_all_cookies', { config })
   }
 
   public deleteCookie(url: string | URL, path = '/', name: string) {
@@ -111,7 +111,7 @@ export class CORSFetch {
 
   public clearCookie() {
     const config: ClearCookiesConfig = { instanceKey: this.config.request.instanceKey }
-    return invoke<void>('plugin:better-cors-fetch|clear_cookie', config)
+    return invoke<void>('plugin:better-cors-fetch|clear_cookie', { config })
   }
 
   public setCookieByParts(
