@@ -3,7 +3,7 @@ name = "tauri-plugin-better-cors-fetch"
 version = "1.2.4"
 description = "Enabling Cross-Origin Resource Sharing (CORS) for Fetch Requests within Tauri applications."
 keywords = ["tauri-plugin", "CORS", "fetch", "unofficial"]
-authors = ["wenxig <wenxinguo12@gmail.com>", "Del Wang <hello@xbox.work>"]
+authors = ["Wenxig <wenxinguo12@gmail.com>", "Del Wang <hello@xbox.work>"]
 repository = "https://github.com/wenxig/tauri-plugin-better-cors-fetch"
 documentation = "https://docs.rs/crate/tauri-plugin-better-cors-fetch"
 license = "MIT"
@@ -56,6 +56,7 @@ default-features = false
 [dependencies.reqwest]
 version = "0.13.2"
 default-features = false
+features = ["cookies"]
 
 [dependencies.tokio]
 version = "1.52.1"
@@ -63,12 +64,10 @@ features = ["sync", "macros"]
 
 [dependencies.cookie_store]
 version = "0.22.1"
-optional = true
 features = ["serde"]
 
 [dependencies.bytes]
 version = "1.11.1"
-optional = true
 
 [dependencies.tracing]
 version = "0.1"
@@ -81,7 +80,6 @@ features = ["build"]
 [features]
 default = [
   "reqwest/default",
-  "cookies",
   "charset",
   "stream",
   "http2",
@@ -100,7 +98,6 @@ native-tls-vendored = ["reqwest/native-tls-vendored"]
 native-tls-vendored-no-alpn = ["reqwest/native-tls-vendored-no-alpn"]
 blocking = ["reqwest/blocking"]
 charset = ["reqwest/charset"]
-cookies = ["reqwest/cookies", "dep:cookie_store", "dep:bytes"]
 gzip = ["reqwest/gzip"]
 brotli = ["reqwest/brotli"]
 zstd = ["reqwest/zstd"]

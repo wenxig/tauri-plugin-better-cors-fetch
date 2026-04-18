@@ -2,15 +2,14 @@
   "name": "tauri-plugin-better-cors-fetch",
   "version": "1.2.4",
   "author": {
-    "name": "wenxig",
+    "name": "Wenxig",
     "email": "wenxinguo12@gmail.com",
     "url": "https://github.com/wenxig"
   },
   "contributors": [
     {
       "name": "Del Wang",
-      "url": "https://github.com/idootop",
-      "email": "hello@xbox.work"
+      "url": "https://github.com/idootop"
     }
   ],
   "repository": {

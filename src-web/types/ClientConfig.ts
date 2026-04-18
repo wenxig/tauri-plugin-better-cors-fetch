@@ -8,4 +8,5 @@ export type ClientConfig = {
   proxy: Proxy | null
   danger: DangerousSettings | null
   userAgent: string | null
+  instanceKey: string
 }

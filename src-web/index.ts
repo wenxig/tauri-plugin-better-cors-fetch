@@ -1,11 +1,13 @@
 import { invoke } from '@tauri-apps/api/core'
-import { isString, merge } from 'es-toolkit'
+import { AbortError, isDate, isNumber, isString, merge } from 'es-toolkit'
 
+import type { ClearCookiesConfig } from './types/ClearCookiesConfig'
 import { ClientConfig } from './types/ClientConfig'
 import type { ContentConfig } from './types/ContentConfig'
 import type { CookieEntry } from './types/CookieEntry'
 import type { DeleteCookieConfig } from './types/DeleteCookieConfig'
 import type { FetchResponse } from './types/FetchResponse'
+import type { GetAllCookiesConfig } from './types/GetAllCookiesConfig'
 import type { GetAllDomainCookiesConfig } from './types/GetAllDomainCookiesConfig'
 import type { GetCookieConfig } from './types/GetCookieConfig'
 import type { SetCookieConfig } from './types/SetCookieConfig'
@@ -43,43 +45,74 @@ type DeepPartial<T> = {
 }
 export type CORSFetchInit = RequestInit & Partial<CORSFetchConfig['request']>
 
+export const GLOBAL_INSTANCE_KEY = ''
+
 export class CORSFetch {
-  public static init(config?: DeepPartial<CORSFetchConfig>, inject = true) {
-    if (inject) {
-      if (!window.CORSFetch) window.CORSFetch = new CORSFetch(inject, config)
-      return window.CORSFetch!
+  /**
+   * @param config 如果`config.request.instanceKey`是`""`或`undefined`，则默认注入全局，并使用全局instance
+   */
+  public static async init(config?: DeepPartial<CORSFetchConfig>) {
+    const cors = new CORSFetch(config)
+    const instanceKey = cors.config.request.instanceKey
+
+    const prepareConfig: ClientConfig = cors.config.request
+    await invoke<void>('plugin:cors-fetch|prepare_requester', prepareConfig)
+
+    if (instanceKey == GLOBAL_INSTANCE_KEY && !window.CORSFetch) {
+      window.CORSFetch = cors
+      window.fetchNative = window.fetch.bind(window)
+      window.fetch = cors.fetch.bind(cors)
+      window.fetchCORS = (input, init) => cors.fetch(input, init, true)
     }
-    return new CORSFetch(false, config)
+    return cors
   }
-  public static setCookie(url: string | URL, content: string) {
-    const config: SetCookieConfig = { url: String(url), content }
+  public setCookie(url: string | URL, content: string) {
+    const config: SetCookieConfig = {
+      url: String(url),
+      content,
+      instanceKey: this.config.request.instanceKey
+    }
     return invoke<void>('plugin:cors-fetch|set_cookie', { config })
   }
 
-  public static getCookie(url: string | URL, name: string) {
-    const config: GetCookieConfig = { url: String(url), name }
+  public getCookie(url: string | URL, name: string) {
+    const config: GetCookieConfig = {
+      url: String(url),
+      name,
+      instanceKey: this.config.request.instanceKey
+    }
     return invoke<string | null>('plugin:cors-fetch|get_cookie', { config })
   }
 
-  public static getAllDomainCookies(url: string | URL) {
-    const config: GetAllDomainCookiesConfig = { url: String(url) }
+  public getAllDomainCookies(url: string | URL) {
+    const config: GetAllDomainCookiesConfig = {
+      url: String(url),
+      instanceKey: this.config.request.instanceKey
+    }
     return invoke<CookieEntry[]>('plugin:cors-fetch|get_all_domain_cookies', { config })
   }
 
-  public static getAllCookies() {
-    return invoke<CookieEntry[]>('plugin:cors-fetch|get_all_cookies')
+  public getAllCookies() {
+    const config: GetAllCookiesConfig = { instanceKey: this.config.request.instanceKey }
+    return invoke<CookieEntry[]>('plugin:cors-fetch|get_all_cookies', config)
   }
 
-  public static deleteCookie(url: string | URL, path = '/', name: string) {
-    const config: DeleteCookieConfig = { url: url.toString(), name, path }
+  public deleteCookie(url: string | URL, path = '/', name: string) {
+    const config: DeleteCookieConfig = {
+      url: url.toString(),
+      name,
+      path,
+      instanceKey: this.config.request.instanceKey
+    }
     return invoke<boolean>('plugin:cors-fetch|delete_cookie', { config })
   }
 
-  public static clearCookie() {
-    return invoke<void>('plugin:cors-fetch|clear_cookie')
+  public clearCookie() {
+    const config: ClearCookiesConfig = { instanceKey: this.config.request.instanceKey }
+    return invoke<void>('plugin:cors-fetch|clear_cookie', config)
   }
 
-  public static setCookieByParts(
+  public setCookieByParts(
     url: string | URL,
     name: string,
     value: string,
@@ -90,26 +123,20 @@ export class CORSFetch {
     if (options.domain) segments.push(`Domain=${options.domain}`)
     if (options.path) segments.push(`Path=${options.path}`)
     if (options.expires) {
-      const expires =
-        options.expires instanceof Date
-          ? options.expires.toUTCString()
-          : new Date(options.expires).toUTCString()
+      const expires = isDate(options.expires)
+        ? options.expires.toUTCString()
+        : new Date(options.expires).toUTCString()
       segments.push(`Expires=${expires}`)
     }
-    if (typeof options.maxAge === 'number') segments.push(`Max-Age=${options.maxAge}`)
+    if (isNumber(options.maxAge)) segments.push(`Max-Age=${options.maxAge}`)
     if (options.secure) segments.push('Secure')
     if (options.httpOnly) segments.push('HttpOnly')
     if (options.sameSite) segments.push(`SameSite=${options.sameSite}`)
 
-    return CORSFetch.setCookie(url, segments.join('; '))
+    return this.setCookie(url, segments.join('; '))
   }
-  protected constructor(inject = true, config?: DeepPartial<CORSFetchConfig>) {
-    if (inject) {
-      window.fetchNative = window.fetch.bind(window)
-      window.fetch = this.fetch.bind(this)
-      window.fetchCORS = (input, init) => this.fetch(input, init, true)
-    }
-    void this.config(config ?? {})
+  protected constructor(config?: DeepPartial<CORSFetchConfig>) {
+    void this.setConfig(config ?? {})
   }
 
   private _streamConfig = { bufferSize: 5, maxBufferBytes: 256 * 1024 }
@@ -121,11 +148,16 @@ export class CORSFetch {
       connectTimeout: null,
       maxRedirections: null,
       userAgent: navigator.userAgent,
-      danger: { acceptInvalidCerts: false, acceptInvalidHostnames: false }
+      danger: { acceptInvalidCerts: false, acceptInvalidHostnames: false },
+      instanceKey: GLOBAL_INSTANCE_KEY
     }
   }
 
-  public config(newConfig: DeepPartial<CORSFetchConfig>) {
+  public get config() {
+    return this._config
+  }
+
+  public setConfig(newConfig: DeepPartial<CORSFetchConfig>) {
     this._config = merge(this._config, newConfig)
     return invoke<void>('plugin:cors-fetch|prepare_requester', { config: this._config }).catch(
       () => {}
@@ -310,7 +342,7 @@ export class CORSFetch {
     }
   }
 
-  private cancel_error = 'User cancelled the request'
+  private cancel_error = new AbortError('User cancelled the request')
 
   private matchesPattern(url: string, patterns: (string | RegExp)[]) {
     return patterns.some(pattern => {

@@ -1,5 +1,6 @@
 use crate::{
   Error, GlobalState, Result,
+  cookies::create_cookie_jar,
   headers::create_headers,
   request::{self, ContentConfig, get_requester},
 };
@@ -58,9 +59,12 @@ pub struct FetchResponse {
 pub fn prepare_requester<R: Runtime>(
   _: Webview<R>,
   state: State<'_, GlobalState>,
-  config: ContentConfig,
+  client: ClientConfig,
 ) {
-  request::prepare_requester(&state, &config.client);
+  let jar = create_cookie_jar(&state.cache_dir, &client.instance_key)
+    .expect("fail to create cookie jar.");
+  state.cookies_jar.insert(client.instance_key.clone(), Arc::new(jar));
+  request::prepare_requester(&state, &client);
 }
 
 #[command]

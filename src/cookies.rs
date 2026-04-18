@@ -13,6 +13,8 @@ use bytes::Bytes;
 use cookie_store::{CookieStore, RawCookie, RawCookieParseError};
 use reqwest::header::HeaderValue;
 
+use crate::InstanceKey;
+
 fn set_cookies(
   cookie_store: &mut CookieStore,
   cookie_headers: &mut dyn Iterator<Item = &HeaderValue>,
@@ -174,6 +176,32 @@ impl CookieStoreMutex {
 
     Ok(())
   }
+}
+
+const COOKIES_EXTREAM: &str = "cookies";
+
+pub(crate) fn create_cookie_jar(
+  cache_dir: &PathBuf,
+  instance_key: &InstanceKey,
+) -> crate::Result<CookieStoreMutex> {
+  use crate::cookies::*;
+  use std::fs::File;
+  use std::io::BufReader;
+
+  std::fs::create_dir_all(&cache_dir)?;
+
+  let path = cache_dir.join(format!(".{}.{}", instance_key, COOKIES_EXTREAM));
+  let file = File::options()
+    .create(true)
+    .append(true)
+    .read(true)
+    .open(&path)?;
+
+  let reader = BufReader::new(file);
+  Ok(
+    CookieStoreMutex::load(path.clone(), reader)
+      .unwrap_or_else(|_e| CookieStoreMutex::new(path, Default::default())),
+  )
 }
 
 impl reqwest::cookie::CookieStore for CookieStoreMutex {

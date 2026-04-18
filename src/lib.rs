@@ -6,7 +6,7 @@
 //!
 //! Enabling Cross-Origin Resource Sharing (CORS) for Fetch Requests within Tauri applications.
 
-use std::sync::Arc;
+use std::{path::PathBuf, sync::Arc};
 
 use dashmap::DashMap;
 pub use reqwest;
@@ -19,75 +19,46 @@ mod request;
 
 pub use error::{Error, Result};
 mod commands;
-#[cfg(feature = "cookies")]
 mod cookies;
 mod error;
 mod headers;
 
-#[cfg(feature = "cookies")]
-const COOKIES_FILENAME: &str = ".cookies";
-
-pub type InstanceKey = u32;
+pub type InstanceKey = String;
 pub(crate) struct GlobalState {
-  #[cfg(feature = "cookies")]
   cookies_jar: DashMap<InstanceKey, std::sync::Arc<crate::cookies::CookieStoreMutex>>,
+  cache_dir: PathBuf,
   pool: DashMap<request::ClientCacheKey, Arc<Client>>,
 }
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
   Builder::<R>::new("cors-fetch")
     .setup(|app, _| {
-      #[cfg(feature = "cookies")]
-      {
-        let cookies_jar = {
-          use crate::cookies::*;
-          use std::fs::File;
-          use std::io::BufReader;
+      let state = GlobalState {
+        cookies_jar: DashMap::new(), //std::sync::Arc::new(cookies_jar),
+        pool: DashMap::new(),
+        cache_dir: app.path().app_cache_dir()?,
+      };
 
-          let cache_dir = app.path().app_cache_dir()?;
-          std::fs::create_dir_all(&cache_dir)?;
-
-          let path = cache_dir.join(COOKIES_FILENAME);
-          let file = File::options()
-            .create(true)
-            .append(true)
-            .read(true)
-            .open(&path)?;
-
-          let reader = BufReader::new(file);
-          CookieStoreMutex::load(path.clone(), reader)
-            .unwrap_or_else(|_e| CookieStoreMutex::new(path, Default::default()))
-        };
-
-        let state = GlobalState {
-          cookies_jar: DashMap::new(), //std::sync::Arc::new(cookies_jar),
-          pool: DashMap::new(),
-        };
-
-        app.manage(state);
-      }
+      app.manage(state);
 
       Ok(())
     })
     .on_event(|app, event| {
-      #[cfg(feature = "cookies")]
-      {
-        if let tauri::RunEvent::Exit = event {
-          let state = app.state::<GlobalState>();
+      if let tauri::RunEvent::Exit = event {
+        let state = app.state::<GlobalState>();
 
-          state
-            .cookies_jar
-            .iter()
-            .for_each(|jar| match jar.request_save() {
-              Ok(rx) => {
-                let _ = rx.recv();
-              }
-              Err(_e) => {
-                #[cfg(feature = "tracing")]
-                tracing::error!("failed to save cookie jar: {_e}");
-              }
-            });
-        }
+        state
+          .cookies_jar
+          .iter()
+          .for_each(|jar| match jar.request_save() {
+            Ok(rx) => {
+              let _ = rx.recv();
+            }
+            Err(_e) => {
+              #[cfg(feature = "tracing")]
+              tracing::error!("failed to save cookie jar: {_e}");
+            }
+          });
       }
     })
     .invoke_handler(tauri::generate_handler![

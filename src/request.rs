@@ -145,10 +145,14 @@ fn build_requester(state: &GlobalState, config: &ClientConfig) -> Result<Client>
     builder = attach_proxy(proxy_config, builder)?;
   }
 
-  #[cfg(feature = "cookies")]
-  {
-    builder = builder.cookie_provider(state.cookies_jar.get(key).clone());
-  }
+  builder = builder.cookie_provider(
+    state
+      .cookies_jar
+      .get(&config.instance_key)
+      .expect("failed to get cookies jar for instance key")
+      .clone(),
+  );
+
   Ok(builder.build()?)
 }
 

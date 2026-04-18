@@ -37,7 +37,7 @@ Register the plugin in your Tauri setup:
 ```ts
 // src/app.ts
 import { CORSFetch } from 'tauri-plugin-better-cors-fetch'
-CORSFetch.init()
+await CORSFetch.init()
 ```
 
 ```rust
@@ -72,41 +72,44 @@ const data = await response.json()
 If you don't want to automatically inject to global, you can do:
 
 ```ts
-CORSFetch.init({}, false)
-//                 ^^^^^ it will disabled injection.
+await CORSFetch.init({ request: { instanceKey: "some" } })
+//                                       ^^^^^^ it will disabled injection to global.
 ```
 
 ### Configuration
 
-You can fine-tune the behavior via `cors.config({ config })` or `CORSFetch.init({ config })`:
+You can fine-tune the behavior via `cors.setConfig({ config })` or `CORSFetch.init({ config })`:
 
 ```ts
-CORSFetch.init({
-  include: [/^https?:\/\//i], // Patterns to proxy (default: all)
-  exclude: ['https://api.openai.com/v1/chat/completions'],
-  // Default request options for Tauri HTTP Client
+// default
+await CORSFetch.init({
+  include: [],
+  exclude: [],
   request: {
-    connectTimeout: 30 * 1000, // ms
-    maxRedirections: 5,
-    proxy: { all: 'http://127.0.0.1:7890' },
+    proxy: null,
+    connectTimeout: null,
+    maxRedirections: null,
+    userAgent: navigator.userAgent,
     danger: { acceptInvalidCerts: false, acceptInvalidHostnames: false },
-    userAgent: navigator.userAgent
+    instanceKey: GLOBAL_INSTANCE_KEY
   }
 })
 ```
 
-### Direct Access APIs
+### Direct Access APIs (if inject to global)
 
 - `window.fetchCORS(url, init)`: Explicitly use the CORS-bypassing fetch.
 - `window.fetchNative(url, init)`: Use the original browser fetch (subject to CORS).
 
 ### Cookies
 
-You can set cookies from TS by calling `CORSFetch.setCookie(url, content)` where `content` is a standard `Set-Cookie` header value.
+You can set cookies from TS by calling `cors.setCookie(url, content)` where `content` is a standard `Set-Cookie` header value.
+
+Cookies are stored independently in each instance.
 
 ```ts
 // Apply to the apex domain and all subdomains.
-await CORSFetch.setCookie(
+await cors.setCookie(
   'https://example.com',
   'session=abc123; Domain=example.com; Path=/; Secure; HttpOnly; SameSite=Lax'
 )
@@ -118,14 +121,14 @@ For convenience, you can also build cookies by parts:
 
 ```ts
 // 1) Host-only cookie (only sent to example.com)
-await CORSFetch.setCookieByParts('https://example.com', 'hostOnly', '1', {
+await cors.setCookieByParts('https://example.com', 'hostOnly', '1', {
   path: '/',
   secure: true,
   sameSite: 'Lax'
 })
 
 // 2) Whole-site + subdomain cookie
-await CORSFetch.setCookieByParts('https://example.com', 'allSite', '1', {
+await cors.setCookieByParts('https://example.com', 'allSite', '1', {
   domain: 'example.com',
   path: '/',
   secure: true,
@@ -133,21 +136,21 @@ await CORSFetch.setCookieByParts('https://example.com', 'allSite', '1', {
 })
 
 // 3) More granular scope
-await CORSFetch.setCookieByParts('https://example.com/account/login', 'scoped', '1', {
+await cors.setCookieByParts('https://example.com/account/login', 'scoped', '1', {
   path: '/account',
   maxAge: 60 * 60,
   sameSite: 'Strict'
 })
 
 // 4) Read a specific cookie value from the cookie jar
-const session = await CORSFetch.getCookie('https://example.com', 'session')
+const session = await cors.getCookie('https://example.com', 'session')
 
 // 5) Read all cookies that would be sent for this URL
-const cookies = await CORSFetch.getAllCookies('https://example.com')
+const cookies = await cors.getAllCookies('https://example.com')
 // => [{ name: 'session', value: 'abc123' }, ...]
 
 // 6) Delete a cookie by name for this URL scope
-const deleted = await CORSFetch.deleteCookie('https://example.com', 'session')
+const deleted = await cors.deleteCookie('https://example.com', 'session')
 ```
 
 ## Limitations
@@ -157,3 +160,4 @@ const deleted = await CORSFetch.deleteCookie('https://example.com', 'session')
 ## License
 
 MIT License © 2024-PRESENT [Del Wang](https://del.wang)
+MIT License © 2026-PRESENT [Wenxig](https://wenxig.vercel.app)
