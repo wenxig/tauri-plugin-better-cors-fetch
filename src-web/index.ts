@@ -57,7 +57,7 @@ export class CORSFetch {
 
     console.debug('Create cors instance.', instanceKey)
     const prepareConfig: ClientConfig = cors.config.request
-    await invoke<void>('plugin:cors-fetch|prepare_requester', prepareConfig)
+    await invoke<void>('plugin:better-cors-fetch|prepare_requester', prepareConfig)
 
     if (instanceKey == GLOBAL_INSTANCE_KEY && !window.CORSFetch) {
       window.CORSFetch = cors
@@ -74,7 +74,7 @@ export class CORSFetch {
       content,
       instanceKey: this.config.request.instanceKey
     }
-    return invoke<void>('plugin:cors-fetch|set_cookie', { config })
+    return invoke<void>('plugin:better-cors-fetch|set_cookie', { config })
   }
 
   public getCookie(url: string | URL, name: string) {
@@ -83,7 +83,7 @@ export class CORSFetch {
       name,
       instanceKey: this.config.request.instanceKey
     }
-    return invoke<string | null>('plugin:cors-fetch|get_cookie', { config })
+    return invoke<string | null>('plugin:better-cors-fetch|get_cookie', { config })
   }
 
   public getAllDomainCookies(url: string | URL) {
@@ -91,12 +91,12 @@ export class CORSFetch {
       url: String(url),
       instanceKey: this.config.request.instanceKey
     }
-    return invoke<CookieEntry[]>('plugin:cors-fetch|get_all_domain_cookies', { config })
+    return invoke<CookieEntry[]>('plugin:better-cors-fetch|get_all_domain_cookies', { config })
   }
 
   public getAllCookies() {
     const config: GetAllCookiesConfig = { instanceKey: this.config.request.instanceKey }
-    return invoke<CookieEntry[]>('plugin:cors-fetch|get_all_cookies', config)
+    return invoke<CookieEntry[]>('plugin:better-cors-fetch|get_all_cookies', config)
   }
 
   public deleteCookie(url: string | URL, path = '/', name: string) {
@@ -106,12 +106,12 @@ export class CORSFetch {
       path,
       instanceKey: this.config.request.instanceKey
     }
-    return invoke<boolean>('plugin:cors-fetch|delete_cookie', { config })
+    return invoke<boolean>('plugin:better-cors-fetch|delete_cookie', { config })
   }
 
   public clearCookie() {
     const config: ClearCookiesConfig = { instanceKey: this.config.request.instanceKey }
-    return invoke<void>('plugin:cors-fetch|clear_cookie', config)
+    return invoke<void>('plugin:better-cors-fetch|clear_cookie', config)
   }
 
   public setCookieByParts(
@@ -161,9 +161,9 @@ export class CORSFetch {
 
   public setConfig(newConfig: DeepPartial<CORSFetchConfig>) {
     this._config = merge(this._config, newConfig)
-    return invoke<void>('plugin:cors-fetch|prepare_requester', { config: this._config }).catch(
-      () => {}
-    )
+    return invoke<void>('plugin:better-cors-fetch|prepare_requester', {
+      config: this._config
+    }).catch(() => {})
   }
 
   private combineChunks(chunks: Uint8Array[], totalSize: number): Uint8Array {
@@ -200,12 +200,12 @@ export class CORSFetch {
       signal?.removeEventListener('abort', onAbort)
 
       if (responseRid !== null) {
-        invoke('plugin:cors-fetch|fetch_cancel_body', { rid: responseRid }).catch(() => {})
+        invoke('plugin:better-cors-fetch|fetch_cancel_body', { rid: responseRid }).catch(() => {})
         responseRid = null
       }
 
       if (rid !== null) {
-        invoke('plugin:cors-fetch|fetch_cancel', { rid }).catch(() => {})
+        invoke('plugin:better-cors-fetch|fetch_cancel', { rid }).catch(() => {})
         rid = null
       }
     }
@@ -227,7 +227,7 @@ export class CORSFetch {
         client: this._config.request
       }
 
-      rid = await invoke('plugin:cors-fetch|fetch', { contentConfig })
+      rid = await invoke('plugin:better-cors-fetch|fetch', { contentConfig })
 
       if (signal?.aborted) throw this.cancel_error
 
@@ -237,7 +237,7 @@ export class CORSFetch {
         url,
         headers: responseHeaders,
         rid: _rid
-      } = await invoke<FetchResponse>('plugin:cors-fetch|fetch_send', { rid })
+      } = await invoke<FetchResponse>('plugin:better-cors-fetch|fetch_send', { rid })
       responseRid = _rid
 
       if (signal?.aborted) throw this.cancel_error
@@ -301,7 +301,7 @@ export class CORSFetch {
         chunkBuffer.length < this._streamConfig.bufferSize &&
         totalBufferedBytes.value < this._streamConfig.maxBufferBytes
       ) {
-        const data = await invoke<ArrayBuffer>('plugin:cors-fetch|fetch_read_body', {
+        const data = await invoke<ArrayBuffer>('plugin:better-cors-fetch|fetch_read_body', {
           rid: responseRid
         })
         const dataUint8 = new Uint8Array(data)
