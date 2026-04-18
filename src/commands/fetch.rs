@@ -2,7 +2,7 @@ use crate::{
   Error, GlobalState, Result,
   cookies::create_cookie_jar,
   headers::create_headers,
-  request::{self, ContentConfig, get_requester},
+  request::{self, ContentConfig, ClientConfig, get_requester},
 };
 use http::{Method, StatusCode, header};
 use serde::Serialize;

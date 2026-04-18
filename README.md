@@ -1,6 +1,19 @@
-![tauri-plugin-cors-fetch](./banner.png)
+![tauri-plugin-better-cors-fetch](./banner.png)
 
-[![MIT licensed](https://img.shields.io/github/license/wenxig/tauri-plugin-better-cors-fetch)](./LICENSE)
+<p align="center">
+  <a href="https://github.com/semantic-release/semantic-release">
+    <img src="https://img.shields.io/badge/semantic--release-angular-e10079?logo=semantic-release" alt="semantic-release: angular" />
+  </a>
+  <a href="./LICENSE">
+    <img src="https://img.shields.io/github/license/wenxig/tauri-plugin-better-cors-fetch" alt="Repo License" />
+  </a>
+  <a href="https://www.npmjs.com/package/tauri-plugin-better-cors-fetch">
+    <img src="https://img.shields.io/npm/dw/tauri-plugin-better-cors-fetch" alt="Npm Downloads" />
+  </a>
+  <a href="https://crates.io/crates/tauri-plugin-better-cors-fetch">
+    <img src="https://img.shields.io/crates/d/tauri-plugin-better-cors-fetch" alt="Crates.io Total Downloads" />
+  </a>
+</p>
 
 An **unofficial** Tauri plugin that enables **seamless cross-origin (CORS) requests** by transparently proxying the native `fetch` API through Tauri's HTTP client.
 
@@ -20,14 +33,14 @@ An **unofficial** Tauri plugin that enables **seamless cross-origin (CORS) reque
 Install the plugin by your package manager:
 
 ```sh
-pnpm i https://github.com/wenxig/tauri-plugin-better-cors-fetch
+pnpm i tauri-plugin-better-cors-fetch
 ```
 
 Add the plugin to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-tauri-plugin-better-cors-fetch = { git = "https://github.com/wenxig/tauri-plugin-better-cors-fetch", branch = "main" }
+tauri-plugin-better-cors-fetch = "1.3"
 ```
 
 ### 2. Initialize Plugin
