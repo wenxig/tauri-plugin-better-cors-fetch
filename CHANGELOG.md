@@ -1,3 +1,17 @@
+# [1.3.0](https://github.com/wenxig/tauri-plugin-better-cors-fetch/compare/1.2.4...1.3.0) (2026-04-18)
+
+
+### Bug Fixes
+
+* [pub] rollback to no swamper ([c6f78a0](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/c6f78a0ba10fe96b8997e3d21700fbfaf33d6222))
+* no need to prepare ([1cd9dd3](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/1cd9dd368c40415dc3993b630e21635206b80b85))
+
+
+### Features
+
+* [pub] publish to pm ([58a041f](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/58a041f3715c604fcd7146f00a7647e0a633fb6b))
+* instance cookie ([f737724](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/f73772400a82a7c3440a195dc3640a2182c6b811))
+
 ## [1.2.4](https://github.com/wenxig/tauri-plugin-better-cors-fetch/compare/1.2.3...1.2.4) (2026-03-11)
 
 ### Bug Fixes
