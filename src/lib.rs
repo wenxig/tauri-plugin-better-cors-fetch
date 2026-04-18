@@ -31,7 +31,7 @@ pub(crate) struct GlobalState {
 }
 
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
-  Builder::<R>::new("cors-fetch")
+  Builder::<R>::new("better-cors-fetch")
     .setup(|app, _| {
       let state = GlobalState {
         cookies_jar: DashMap::new(), //std::sync::Arc::new(cookies_jar),
