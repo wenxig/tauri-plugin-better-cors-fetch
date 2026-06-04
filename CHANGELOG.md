@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/wenxig/tauri-plugin-better-cors-fetch/compare/1.3.6...1.4.0) (2026-06-04)
+
+
+### Features
+
+* [pub] update all depends ([f03e0d3](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/f03e0d33905a3e6334e696009cd5767cfa556591))
+
 ## [1.3.6](https://github.com/wenxig/tauri-plugin-better-cors-fetch/compare/1.3.5...1.3.6) (2026-04-18)
 
 
