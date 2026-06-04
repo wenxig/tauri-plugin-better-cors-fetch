@@ -20,7 +20,9 @@
     "noImplicitAny": true,
     "noImplicitOverride": true,
     "isolatedModules": true,
-    "noImplicitThis": true
+    "noImplicitThis": true,
+    "composite": true,
+    "isolatedDeclarations": true,
   },
   "include": ["./src-web/**/*"]
 }

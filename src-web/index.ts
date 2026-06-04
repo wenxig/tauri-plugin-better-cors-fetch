@@ -51,7 +51,7 @@ export class CORSFetch {
   /**
    * @param config 如果`config.request.instanceKey`是`""`或`undefined`，则默认注入全局，并使用全局instance
    */
-  public static async init(config?: DeepPartial<CORSFetchConfig>) {
+  public static async init(config?: DeepPartial<CORSFetchConfig>): Promise<CORSFetch> {
     const cors = new CORSFetch(config)
     const instanceKey = cors.config.request.instanceKey
 
@@ -68,7 +68,7 @@ export class CORSFetch {
     console.debug('Create cors instance done.', instanceKey)
     return cors
   }
-  public setCookie(url: string | URL, content: string) {
+  public setCookie(url: string | URL, content: string): Promise<void> {
     const config: SetCookieConfig = {
       url: String(url),
       content,
@@ -77,7 +77,7 @@ export class CORSFetch {
     return invoke<void>('plugin:better-cors-fetch|set_cookie', { config })
   }
 
-  public getCookie(url: string | URL, name: string) {
+  public getCookie(url: string | URL, name: string): Promise<string | null> {
     const config: GetCookieConfig = {
       url: String(url),
       name,
@@ -86,7 +86,7 @@ export class CORSFetch {
     return invoke<string | null>('plugin:better-cors-fetch|get_cookie', { config })
   }
 
-  public getAllDomainCookies(url: string | URL) {
+  public getAllDomainCookies(url: string | URL): Promise<CookieEntry[]> {
     const config: GetAllDomainCookiesConfig = {
       url: String(url),
       instanceKey: this.config.request.instanceKey
@@ -94,12 +94,12 @@ export class CORSFetch {
     return invoke<CookieEntry[]>('plugin:better-cors-fetch|get_all_domain_cookies', { config })
   }
 
-  public getAllCookies() {
+  public getAllCookies(): Promise<CookieEntry[]> {
     const config: GetAllCookiesConfig = { instanceKey: this.config.request.instanceKey }
     return invoke<CookieEntry[]>('plugin:better-cors-fetch|get_all_cookies', { config })
   }
 
-  public deleteCookie(url: string | URL, path = '/', name: string) {
+  public deleteCookie(url: string | URL, path = '/', name: string): Promise<boolean> {
     const config: DeleteCookieConfig = {
       url: url.toString(),
       name,
@@ -109,7 +109,7 @@ export class CORSFetch {
     return invoke<boolean>('plugin:better-cors-fetch|delete_cookie', { config })
   }
 
-  public clearCookie() {
+  public clearCookie(): Promise<void> {
     const config: ClearCookiesConfig = { instanceKey: this.config.request.instanceKey }
     return invoke<void>('plugin:better-cors-fetch|clear_cookie', { config })
   }
@@ -119,7 +119,7 @@ export class CORSFetch {
     name: string,
     value: string,
     options: CookieOptions = {}
-  ) {
+  ): Promise<void> {
     const segments = [`${name}=${value}`]
 
     if (options.domain) segments.push(`Domain=${options.domain}`)
@@ -155,11 +155,11 @@ export class CORSFetch {
     }
   }
 
-  public get config() {
+  public get config(): CORSFetchConfig {
     return this._config
   }
 
-  public setConfig(newConfig: DeepPartial<CORSFetchConfig>) {
+  public setConfig(newConfig: DeepPartial<CORSFetchConfig>): Promise<void> {
     this._config = merge(this._config, newConfig)
     return invoke<void>('plugin:better-cors-fetch|prepare_requester', {
       config: this._config
@@ -176,7 +176,11 @@ export class CORSFetch {
     return combined
   }
 
-  public async fetch(input: Parameters<typeof fetch>[0], init?: CORSFetchInit, force = false) {
+  public async fetch(
+    input: Parameters<typeof fetch>[0],
+    init?: CORSFetchInit,
+    force = false
+  ): Promise<Response> {
     const urlStr = input instanceof Request ? input.url : String(input)
 
     if (!force && urlStr.startsWith('data:')) {
