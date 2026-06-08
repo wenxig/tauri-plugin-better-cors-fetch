@@ -1,28 +1,14 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "emitDecoratorMetadata": true,
-    "strict": true,
-    "target": "ESNext",
-    "useDefineForClassFields": true,
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "noEmit": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "noImplicitReturns": false,
-    "noImplicitAny": true,
-    "noImplicitOverride": true,
-    "isolatedModules": true,
-    "noImplicitThis": true,
     "composite": true,
-    "isolatedDeclarations": true,
+    "target": "ESNext",
+    "module": "nodenext",
+    "skipLibCheck": true,
+    /* Bundler mode */
+    "moduleResolution": "nodenext",
+    "resolveJsonModule": true,
+    "isolatedModules": true
   },
-  "include": ["./src-web/**/*"]
+  "include": ["./.releaserc.*", "./script/**/*", "./vite.config.ts"]
 }

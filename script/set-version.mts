@@ -14,7 +14,7 @@ export async function setVersion(version: string) {
   }
   {
     const path = join(import.meta.dirname, '../Cargo.toml')
-    const pkg: any = Bun.TOML.parse(await readFile(path, { encoding: 'utf-8' }))
+    const pkg: any = TOML.parse(await readFile(path, { encoding: 'utf-8' }))
     pkg.package.version = version
     await writeFile(path, TOML.stringify(pkg), { encoding: 'utf-8' })
   }

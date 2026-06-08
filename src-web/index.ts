@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { AbortError, isDate, isNumber, isString, merge } from 'es-toolkit'
 
 import type { ClearCookiesConfig } from './types/ClearCookiesConfig'
-import { ClientConfig } from './types/ClientConfig'
+import type { ClientConfig } from './types/ClientConfig'
 import type { ContentConfig } from './types/ContentConfig'
 import type { CookieEntry } from './types/CookieEntry'
 import type { DeleteCookieConfig } from './types/DeleteCookieConfig'

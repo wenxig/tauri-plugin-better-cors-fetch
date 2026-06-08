@@ -7,7 +7,8 @@ import pkg from '../package.json' with { type: 'json' }
 
 import { setVersion } from './set-version.mts'
 
-const file = fs.createWriteStream('./log.log')
+const devNull = process.platform === 'win32' ? 'NUL' : '/dev/null'
+const file = fs.createWriteStream(devNull)
 const result = await semantic(config, {
   env: { ...process.env, IS_DUR_RUN: true },
   stdout: file as any,

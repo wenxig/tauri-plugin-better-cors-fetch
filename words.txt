@@ -13,6 +13,7 @@ Favourite
 favselect
 Gmailerrorred
 hostnames
+iarna
 kysely
 Levelboard
 lightningcss
@@ -27,6 +28,7 @@ Popconfirm
 Popselect
 Recveiver
 redirections
+releaserc
 reloadable
 Reloadable
 reqwest
