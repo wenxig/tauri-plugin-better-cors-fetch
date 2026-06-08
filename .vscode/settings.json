@@ -2,5 +2,10 @@
   "js/ts.experimental.useTsgo": true,
   "oxc.path.oxfmt": "node_modules/.bin/oxfmt",
   "oxc.path.oxlint": "node_modules/.bin/oxlint",
-  "oxc.path.tsgolint": "node_modules/.bin/tsgolint"
+  "oxc.path.tsgolint": "node_modules/.bin/tsgolint",
+  "editor.defaultFormatter": "oxc.oxc-vscode",
+  "oxc.fmt.configPath": "./vite.config.ts",
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "file",
+  "editor.codeActionsOnSave": { "source.fixAll.oxc": "explicit" }
 }

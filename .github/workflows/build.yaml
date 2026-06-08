@@ -12,8 +12,6 @@ jobs:
   build:
     if: ${{ github.event.head_commit && contains(github.event.head_commit.message, '[pub]') }}
     runs-on: ubuntu-latest
-    env:
-      HUSKY: 0
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -21,20 +19,13 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Use Node.js
-        uses: actions/setup-node@v6
+      - uses: voidzero-dev/setup-vp@v1
         with:
-          node-version: 25
-          registry-url: 'https://registry.npmjs.org'
-          
+          node-version: '24'
+          cache: true
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
-
-      - name: Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Install dependencies
-        run: bun install
 
       # build
       - name: Change version
@@ -48,8 +39,8 @@ jobs:
 
       - name: Build
         run: |
-          # cargo test
-          bun run build
+          cargo test
+          vp run build
 
       #publish
       - name: Run semantic-release
@@ -57,6 +48,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
         run: |
-          npm publish
+          pnpm publish
           cargo publish --allow-dirty --no-verify
-          npm exec semantic-release
+          pnpm exec semantic-release

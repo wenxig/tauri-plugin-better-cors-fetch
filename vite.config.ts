@@ -1,0 +1,71 @@
+import { defineConfig } from 'vite-plus'
+
+export default defineConfig({
+  staged: { '*': 'vp check --fix' },
+  pack: {
+    entry: './src-web/index.ts',
+    deps: { alwaysBundle: /.+/, onlyBundle: false },
+    dts: { oxc: true }
+  },
+  fmt: {
+    ignorePatterns: ['types/*'],
+    endOfLine: 'lf',
+    semi: false,
+    useTabs: false,
+    printWidth: 100,
+    tabWidth: 2,
+    singleQuote: true,
+    trailingComma: 'none',
+    experimentalSortPackageJson: true,
+    arrowParens: 'avoid',
+    jsxSingleQuote: true,
+    singleAttributePerLine: false,
+    vueIndentScriptAndStyle: false,
+    bracketSameLine: false,
+    bracketSpacing: true,
+    embeddedLanguageFormatting: 'auto',
+    insertFinalNewline: false,
+    proseWrap: 'preserve',
+    htmlWhitespaceSensitivity: 'css',
+    objectWrap: 'collapse',
+    quoteProps: 'consistent',
+    experimentalSortImports: {
+      groups: [
+        ['builtin'],
+        ['external', 'type-external'],
+        ['internal', 'type-internal'],
+        ['parent', 'type-parent'],
+        ['sibling', 'type-sibling'],
+        ['index', 'type-index']
+      ]
+    }
+  },
+  lint: {
+    plugins: ['unicorn', 'typescript', 'oxc', 'vue'],
+    categories: { correctness: 'error' },
+    rules: {
+      'no-unused-expressions': 'allow',
+      'no-useless-escape': 'allow',
+      'no-non-null-asserted-optional-chain': 'allow'
+    },
+    settings: {
+      'jsx-a11y': { components: {}, attributes: {} },
+      'next': { rootDir: [] },
+      'jsdoc': {
+        ignorePrivate: false,
+        ignoreInternal: false,
+        ignoreReplacesDocs: true,
+        overrideReplacesDocs: true,
+        augmentsExtendsReplacesDocs: false,
+        implementsReplacesDocs: false,
+        exemptDestructuredRootsFromChecks: false,
+        tagNamePreference: {}
+      },
+      'vitest': { typecheck: false }
+    },
+    env: { builtin: true },
+    globals: {},
+    ignorePatterns: [],
+    options: { typeAware: true, typeCheck: true }
+  }
+})
