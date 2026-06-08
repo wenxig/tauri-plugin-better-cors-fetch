@@ -34,7 +34,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IS_DUR_RUN: true
         run: |
-          OLD_VERSION="$(bun ./script/update-version.mts)"
+          OLD_VERSION="$(node ./script/update-version.mts)"
           echo "old_version=$OLD_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Build
