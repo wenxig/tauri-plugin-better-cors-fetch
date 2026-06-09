@@ -15,39 +15,39 @@
   </a>
 </p>
 
-[简体中文](./README.zh-CN.md)
+[English](./README.md)
 
-An **unofficial** Tauri plugin that enables **seamless cross-origin (CORS) requests** by transparently proxying the native `fetch` and `XMLHttpRequest` APIs through Tauri's HTTP client.
+一个**非官方** Tauri 插件，用于让前端以接近原生的方式发起跨域请求。插件会把浏览器侧的 `fetch` 和 `XMLHttpRequest` 透明代理到 Tauri 侧 HTTP client，从而绕过浏览器 CORS 限制。
 
 **Fork from <https://github.com/idootop/tauri-plugin-cors-fetch>**
 
-## Features
+## 功能
 
-- **Low Code Change**: Use standard `fetch()` and `XMLHttpRequest` as you normally would.
-- **Streaming & SSE**: Full support for Response Streaming and Server-Sent Events (SSE).
-- **Configurable**: Granular control over which domains bypass CORS.
-- **Multi-platform**: Supports _Windows, macOS, Linux, iOS, and Android_.
+- **低改造成本**：继续使用标准 `fetch()` 和 `XMLHttpRequest`。
+- **流式响应与 SSE**：支持 `Response` streaming 和 Server-Sent Events。
+- **可配置规则**：通过 `include` / `exclude` 控制哪些域名走 Tauri 代理。
+- **多平台**：支持 _Windows、macOS、Linux、iOS 和 Android_。
 
-## Quick Start
+## 快速开始
 
-### 1. Install Dependencies
+### 1. 安装依赖
 
-Install the plugin by your package manager:
+用你的包管理器安装前端包：
 
 ```sh
 pnpm i tauri-plugin-better-cors-fetch
 ```
 
-Add the plugin to your `Cargo.toml`:
+在 `Cargo.toml` 中加入 Rust 插件：
 
 ```toml
 [dependencies]
 tauri-plugin-better-cors-fetch = "1.3"
 ```
 
-### 2. Initialize Plugin
+### 2. 初始化插件
 
-Register the plugin in your Tauri setup:
+在前端入口初始化：
 
 ```ts
 // src/app.ts
@@ -55,31 +55,33 @@ import { CORSFetch } from 'tauri-plugin-better-cors-fetch'
 await CORSFetch.init()
 ```
 
+在 Tauri 侧注册插件：
+
 ```rust
 // src-tauri/src/lib.rs
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_better_cors_fetch::init()) // 👈 here
+        .plugin(tauri_plugin_better_cors_fetch::init())
         .run(tauri::generate_context!())
         .expect("failed to run app");
 }
 ```
 
-### 3. Configure Permissions & Settings
+### 3. 配置权限
 
-Add the required permission to your capability file:
+在 capability 文件中加入权限：
 
 ```jsonc
 // src-tauri/capabilities/default.json
 { "permissions": ["cors-fetch:default"] }
 ```
 
-## Usage
+## 使用
 
-Once initialized, the plugin automatically hooks into the global `fetch` and `XMLHttpRequest`. No changes to your frontend code are required:
+初始化后，插件会自动接管全局 `fetch` 和 `XMLHttpRequest`。已有前端代码通常无需修改：
 
 ```ts
-// This request now bypasses CORS automatically
+// 该请求会自动绕过浏览器 CORS 限制
 const response = await fetch('https://api.openai.com')
 const data = await response.json()
 
@@ -89,15 +91,15 @@ xhr.onload = () => console.log(xhr.responseText)
 xhr.send()
 ```
 
-### How It Works
+### 工作方式
 
-`CORSFetch.init()` keeps the browser-native APIs at `window.fetchNative` and `window.XMLHttpRequestNative`, then installs CORS-aware replacements for `window.fetch` and `window.XMLHttpRequest`.
+`CORSFetch.init()` 会先保存浏览器原生 API 到 `window.fetchNative` 和 `window.XMLHttpRequestNative`，再把全局 `window.fetch` 和 `window.XMLHttpRequest` 替换为支持 CORS 代理的实现。
 
-By default, all `http` and `https` requests are proxied through the Tauri side. You can narrow that behavior with `include` and `exclude`. Tauri internal URLs and `data:` fetches keep using the native browser implementation unless you call the explicit CORS APIs.
+默认情况下，所有 `http` 和 `https` 请求都会走 Tauri 侧 HTTP client。你可以通过 `include` 和 `exclude` 缩小或排除代理范围。Tauri 内部 URL 和普通 `data:` fetch 默认仍走浏览器原生实现，除非你显式调用强制代理 API。
 
-### Fetch
+### Fetch 用法
 
-Use `fetch()` normally after initialization:
+初始化后可以继续正常使用 `fetch()`：
 
 ```ts
 const response = await fetch('https://example.com/api/users', {
@@ -109,7 +111,7 @@ const response = await fetch('https://example.com/api/users', {
 const users = await response.json()
 ```
 
-Use `window.fetchCORS()` when you want to force the Tauri HTTP path even if the URL does not match the current `include` / `exclude` rules:
+当你想忽略当前 `include` / `exclude` 规则并强制走 Tauri HTTP 通道时，使用 `window.fetchCORS()`：
 
 ```ts
 const response = await window.fetchCORS('https://example.com/api/events', {
@@ -121,15 +123,15 @@ for await (const chunk of response.body!) {
 }
 ```
 
-Use `window.fetchNative()` when you explicitly want the browser implementation:
+当你明确要使用浏览器原生 fetch 时，使用 `window.fetchNative()`：
 
 ```ts
 const response = await window.fetchNative('/local.json')
 ```
 
-### XMLHttpRequest
+### XMLHttpRequest 用法
 
-`XMLHttpRequest` is also patched globally, so existing libraries that still use XHR can use the same CORS-bypassing path:
+插件也会接管全局 `XMLHttpRequest`，因此仍使用 XHR 的旧库也可以走同一套 CORS 代理：
 
 ```ts
 const xhr = new XMLHttpRequest()
@@ -145,7 +147,7 @@ xhr.onerror = () => {
 xhr.send(JSON.stringify({ name: 'demo' }))
 ```
 
-Use `window.XMLHttpRequestCORS` to force the adapter, or `window.XMLHttpRequestNative` to opt back into browser XHR:
+当你想强制使用 XHR 代理适配器时，使用 `window.XMLHttpRequestCORS`；当你想退回浏览器原生 XHR 时，使用 `window.XMLHttpRequestNative`：
 
 ```ts
 const xhr = new window.XMLHttpRequestCORS()
@@ -154,19 +156,19 @@ xhr.onload = () => console.log(xhr.responseText)
 xhr.send()
 ```
 
-If you do not want global API injection, initialize with a non-empty `instanceKey`:
+如果你不想自动注入到全局对象，可以指定非空 `instanceKey`：
 
 ```ts
 await CORSFetch.init({ request: { instanceKey: 'some' } })
-//                                       ^^^^^^ disables global injection.
+//                                       ^^^^^^ 非空 instanceKey 会禁用全局注入
 ```
 
-### Configuration
+### 配置
 
-You can fine-tune the behavior via `cors.setConfig({ config })` or `CORSFetch.init({ config })`:
+你可以通过 `cors.setConfig({ config })` 或 `CORSFetch.init({ config })` 调整行为：
 
 ```ts
-// default
+// 默认配置
 await CORSFetch.init({
   include: [],
   exclude: [],
@@ -181,42 +183,42 @@ await CORSFetch.init({
 })
 ```
 
-### Direct Access APIs
+### 全局直连 API
 
-These APIs are available when the default global injection is enabled:
+仅在默认全局注入启用时可用：
 
-- `window.fetchCORS(url, init)`: Explicitly use the CORS-bypassing fetch.
-- `window.fetchNative(url, init)`: Use the original browser fetch, still subject to browser CORS.
-- `window.XMLHttpRequestCORS`: Explicitly create a CORS-bypassing XHR adapter.
-- `window.XMLHttpRequestNative`: Use the original browser XHR constructor, still subject to browser CORS.
+- `window.fetchCORS(url, init)`：显式使用绕过 CORS 的 fetch。
+- `window.fetchNative(url, init)`：使用浏览器原生 fetch，仍受浏览器 CORS 约束。
+- `window.XMLHttpRequestCORS`：显式创建绕过 CORS 的 XHR adapter。
+- `window.XMLHttpRequestNative`：使用浏览器原生 XHR constructor，仍受浏览器 CORS 约束。
 
 ### Cookies
 
-You can set cookies from TS by calling `cors.setCookie(url, content)` where `content` is a standard `Set-Cookie` header value.
+可以通过 `cors.setCookie(url, content)` 在 TS 侧写入 cookie，其中 `content` 是标准 `Set-Cookie` header 值。
 
-Cookies are stored independently in each instance.
+每个实例拥有独立 cookie 存储。
 
 ```ts
-// Apply to the apex domain and all subdomains.
+// 应用到根域名和所有子域名
 await cors.setCookie(
   'https://example.com',
   'session=abc123; Domain=example.com; Path=/; Secure; HttpOnly; SameSite=Lax'
 )
 ```
 
-This plugin stores cookies using RFC 6265 matching rules (domain/path/secure/expiry), not plain URL prefix matching.
+插件按 RFC 6265 的 domain/path/secure/expiry 规则匹配 cookie，而不是做简单 URL 前缀匹配。
 
-For convenience, you can also build cookies by parts:
+也可以用分段参数构建 cookie：
 
 ```ts
-// 1) Host-only cookie (only sent to example.com)
+// 1) Host-only cookie，仅发送给 example.com
 await cors.setCookieByParts('https://example.com', 'hostOnly', '1', {
   path: '/',
   secure: true,
   sameSite: 'Lax'
 })
 
-// 2) Whole-site + subdomain cookie
+// 2) 整站和子域名共享 cookie
 await cors.setCookieByParts('https://example.com', 'allSite', '1', {
   domain: 'example.com',
   path: '/',
@@ -224,27 +226,27 @@ await cors.setCookieByParts('https://example.com', 'allSite', '1', {
   sameSite: 'Lax'
 })
 
-// 3) More granular scope
+// 3) 更细粒度的路径范围
 await cors.setCookieByParts('https://example.com/account/login', 'scoped', '1', {
   path: '/account',
   maxAge: 60 * 60,
   sameSite: 'Strict'
 })
 
-// 4) Read a specific cookie value from the cookie jar
+// 4) 读取指定 cookie
 const session = await cors.getCookie('https://example.com', 'session')
 
-// 5) Read all cookies that would be sent for this URL
+// 5) 读取该 URL 会发送的所有 cookie
 const cookies = await cors.getAllCookies('https://example.com')
 // => [{ name: 'session', value: 'abc123' }, ...]
 
-// 6) Delete a cookie by name for this URL scope
+// 6) 删除指定 cookie
 const deleted = await cors.deleteCookie('https://example.com', 'session')
 ```
 
-## Limitations
+## 限制
 
-- **XHR sync mode**: Synchronous `XMLHttpRequest` is not supported by the adapter; use async XHR.
+- **XHR 同步模式**：适配器不支持同步 `XMLHttpRequest`，请使用异步 XHR。
 
 ## License
 
