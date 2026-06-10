@@ -1,65 +1,62 @@
-# [1.4.0](https://github.com/wenxig/tauri-plugin-better-cors-fetch/compare/1.3.6...1.4.0) (2026-06-04)
-
+# [1.7.0](https://github.com/wenxig/tauri-plugin-better-cors-fetch/compare/1.6.0...1.7.0) (2026-06-10)
 
 ### Features
 
-* [pub] update all depends ([f03e0d3](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/f03e0d33905a3e6334e696009cd5767cfa556591))
+- bind xhr to cors instance [pub] ([d2325a6](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/d2325a65962391ae5ee5e273c8d9420173a2c166))
+
+# [1.4.0](https://github.com/wenxig/tauri-plugin-better-cors-fetch/compare/1.3.6...1.4.0) (2026-06-04)
+
+### Features
+
+- [pub] update all depends ([f03e0d3](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/f03e0d33905a3e6334e696009cd5767cfa556591))
 
 ## [1.3.6](https://github.com/wenxig/tauri-plugin-better-cors-fetch/compare/1.3.5...1.3.6) (2026-04-18)
 
-
 ### Bug Fixes
 
-* [pub] ([813ad2d](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/813ad2d206e00d1ec88958baa0a095aa575ccf16))
+- [pub] ([813ad2d](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/813ad2d206e00d1ec88958baa0a095aa575ccf16))
 
 ## [1.3.5](https://github.com/wenxig/tauri-plugin-better-cors-fetch/compare/1.3.4...1.3.5) (2026-04-18)
 
-
 ### Bug Fixes
 
-* [pub] plugin name ([0791c4e](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/0791c4e44c13f4a5b1be65aaf51b523278b6f0b0))
+- [pub] plugin name ([0791c4e](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/0791c4e44c13f4a5b1be65aaf51b523278b6f0b0))
 
 ## [1.3.4](https://github.com/wenxig/tauri-plugin-better-cors-fetch/compare/1.3.3...1.3.4) (2026-04-18)
 
-
 ### Bug Fixes
 
-* [pub] init error ([0bcdc93](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/0bcdc9374a463d6ee08e74305dd75b7bc1e92aa1))
+- [pub] init error ([0bcdc93](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/0bcdc9374a463d6ee08e74305dd75b7bc1e92aa1))
 
 ## [1.3.3](https://github.com/wenxig/tauri-plugin-better-cors-fetch/compare/1.3.2...1.3.3) (2026-04-18)
 
-
 ### Bug Fixes
 
-* [pub] log ([cbf53f1](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/cbf53f19c8936537204447681b765cf5a57daab4))
+- [pub] log ([cbf53f1](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/cbf53f19c8936537204447681b765cf5a57daab4))
 
 ## [1.3.2](https://github.com/wenxig/tauri-plugin-better-cors-fetch/compare/1.3.1...1.3.2) (2026-04-18)
 
-
 ### Bug Fixes
 
-* [pub] ci publish ([47c59de](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/47c59de2b1f98d967b1f787c5827f16a8135639a))
+- [pub] ci publish ([47c59de](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/47c59de2b1f98d967b1f787c5827f16a8135639a))
 
 ## [1.3.1](https://github.com/wenxig/tauri-plugin-better-cors-fetch/compare/1.3.0...1.3.1) (2026-04-18)
 
-
 ### Bug Fixes
 
-* ci [pub] ([1037923](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/1037923e236c92a0ded4b477c2a80bd792e6e5c2))
+- ci [pub] ([1037923](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/1037923e236c92a0ded4b477c2a80bd792e6e5c2))
 
 # [1.3.0](https://github.com/wenxig/tauri-plugin-better-cors-fetch/compare/1.2.4...1.3.0) (2026-04-18)
 
-
 ### Bug Fixes
 
-* [pub] rollback to no swamper ([c6f78a0](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/c6f78a0ba10fe96b8997e3d21700fbfaf33d6222))
-* no need to prepare ([1cd9dd3](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/1cd9dd368c40415dc3993b630e21635206b80b85))
-
+- [pub] rollback to no swamper ([c6f78a0](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/c6f78a0ba10fe96b8997e3d21700fbfaf33d6222))
+- no need to prepare ([1cd9dd3](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/1cd9dd368c40415dc3993b630e21635206b80b85))
 
 ### Features
 
-* [pub] publish to pm ([58a041f](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/58a041f3715c604fcd7146f00a7647e0a633fb6b))
-* instance cookie ([f737724](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/f73772400a82a7c3440a195dc3640a2182c6b811))
+- [pub] publish to pm ([58a041f](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/58a041f3715c604fcd7146f00a7647e0a633fb6b))
+- instance cookie ([f737724](https://github.com/wenxig/tauri-plugin-better-cors-fetch/commit/f73772400a82a7c3440a195dc3640a2182c6b811))
 
 ## [1.2.4](https://github.com/wenxig/tauri-plugin-better-cors-fetch/compare/1.2.3...1.2.4) (2026-03-11)
 
