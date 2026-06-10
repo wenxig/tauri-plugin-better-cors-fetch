@@ -145,10 +145,12 @@ xhr.onerror = () => {
 xhr.send(JSON.stringify({ name: 'demo' }))
 ```
 
-Use `window.XMLHttpRequestCORS` to force the adapter, or `window.XMLHttpRequestNative` to opt back into browser XHR:
+Every `CORSFetch` instance also exposes an instance-bound XHR constructor. This is useful when you use a non-global instance with its own `instanceKey`, proxy, cookie jar, or include/exclude rules:
 
 ```ts
-const xhr = new window.XMLHttpRequestCORS()
+const core = await CORSFetch.init({ request: { instanceKey: 'private-api' } })
+
+const xhr = new core.XHR()
 xhr.open('GET', 'https://example.com/private')
 xhr.onload = () => console.log(xhr.responseText)
 xhr.send()
@@ -157,8 +159,10 @@ xhr.send()
 If you do not want global API injection, initialize with a non-empty `instanceKey`:
 
 ```ts
-await CORSFetch.init({ request: { instanceKey: 'some' } })
+const core = await CORSFetch.init({ request: { instanceKey: 'some' } })
 //                                       ^^^^^^ disables global injection.
+
+const xhr = new core.XHR()
 ```
 
 ### Configuration
@@ -187,8 +191,8 @@ These APIs are available when the default global injection is enabled:
 
 - `window.fetchCORS(url, init)`: Explicitly use the CORS-bypassing fetch.
 - `window.fetchNative(url, init)`: Use the original browser fetch, still subject to browser CORS.
-- `window.XMLHttpRequestCORS`: Explicitly create a CORS-bypassing XHR adapter.
 - `window.XMLHttpRequestNative`: Use the original browser XHR constructor, still subject to browser CORS.
+- `core.XHR`: Create an XHR constructor bound to a specific `CORSFetch` instance.
 
 ### Cookies
 

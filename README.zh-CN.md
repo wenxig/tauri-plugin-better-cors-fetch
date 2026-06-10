@@ -147,10 +147,12 @@ xhr.onerror = () => {
 xhr.send(JSON.stringify({ name: 'demo' }))
 ```
 
-当你想强制使用 XHR 代理适配器时，使用 `window.XMLHttpRequestCORS`；当你想退回浏览器原生 XHR 时，使用 `window.XMLHttpRequestNative`：
+每个 `CORSFetch` 实例也会暴露一个绑定该实例配置的 XHR 构造器。当你使用非全局实例，并且需要它自己的 `instanceKey`、代理、cookie jar 或 include/exclude 规则时，可以直接使用 `core.XHR`：
 
 ```ts
-const xhr = new window.XMLHttpRequestCORS()
+const core = await CORSFetch.init({ request: { instanceKey: 'private-api' } })
+
+const xhr = new core.XHR()
 xhr.open('GET', 'https://example.com/private')
 xhr.onload = () => console.log(xhr.responseText)
 xhr.send()
@@ -159,8 +161,10 @@ xhr.send()
 如果你不想自动注入到全局对象，可以指定非空 `instanceKey`：
 
 ```ts
-await CORSFetch.init({ request: { instanceKey: 'some' } })
+const core = await CORSFetch.init({ request: { instanceKey: 'some' } })
 //                                       ^^^^^^ 非空 instanceKey 会禁用全局注入
+
+const xhr = new core.XHR()
 ```
 
 ### 配置
@@ -189,8 +193,8 @@ await CORSFetch.init({
 
 - `window.fetchCORS(url, init)`：显式使用绕过 CORS 的 fetch。
 - `window.fetchNative(url, init)`：使用浏览器原生 fetch，仍受浏览器 CORS 约束。
-- `window.XMLHttpRequestCORS`：显式创建绕过 CORS 的 XHR adapter。
 - `window.XMLHttpRequestNative`：使用浏览器原生 XHR constructor，仍受浏览器 CORS 约束。
+- `core.XHR`：创建绑定到某个 `CORSFetch` 实例的 XHR constructor。
 
 ### Cookies
 

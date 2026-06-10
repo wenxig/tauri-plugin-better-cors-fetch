@@ -13,10 +13,7 @@ import type { GetCookieConfig } from './types/GetCookieConfig'
 import type { SetCookieConfig } from './types/SetCookieConfig'
 import { createCORSXMLHttpRequestConstructor } from './xhr'
 
-export { createCORSFetch } from './fetch'
-export { createCORSXMLHttpRequestConstructor } from './xhr'
 export type { CORSFetchConfig, CORSFetchInit } from './fetch'
-export type { CORSFetchFunction } from './xhr'
 
 declare global {
   interface Window {
@@ -28,7 +25,6 @@ declare global {
     ) => ReturnType<CORSFetch['fetch']>
     fetch: CORSFetch['fetch']
     XMLHttpRequestNative: typeof XMLHttpRequest
-    XMLHttpRequestCORS: typeof XMLHttpRequest
   }
 }
 
@@ -68,8 +64,7 @@ export class CORSFetch {
       window.fetch = corsFetch
       window.fetchCORS = (input, init) => cors.fetch(input, init, true)
       window.XMLHttpRequestNative = window.XMLHttpRequest
-      window.XMLHttpRequestCORS = createCORSXMLHttpRequestConstructor(corsFetch, true)
-      window.XMLHttpRequest = createCORSXMLHttpRequestConstructor(corsFetch)
+      window.XMLHttpRequest = cors.XHR
     }
     console.debug('Create cors instance done.', instanceKey)
     return cors
@@ -93,6 +88,10 @@ export class CORSFetch {
   }
 
   private _fetch = createCORSFetch(() => this._config)
+
+  public readonly XHR: typeof XMLHttpRequest = createCORSXMLHttpRequestConstructor(
+    this.fetch.bind(this)
+  )
 
   public get config(): CORSFetchConfig {
     return this._config

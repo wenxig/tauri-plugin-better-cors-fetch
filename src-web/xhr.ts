@@ -110,7 +110,9 @@ function parseContentLength(headers: Headers): number | null {
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : null
 }
 
-class CORSXMLHttpRequestUpload extends EventTarget {
+class CORSXMLHttpRequestUpload extends EventTarget implements XMLHttpRequestUpload {
+  public readonly impl: XMLHttpRequestUpload = this
+
   public onabort: XHRProgressHandler = null
   public onerror: XHRProgressHandler = null
   public onload: XHRProgressHandler = null
@@ -122,7 +124,7 @@ class CORSXMLHttpRequestUpload extends EventTarget {
   public emit(type: string, init: ProgressEventInit = {}) {
     const event = createProgressEvent(type, init)
     const dispatched = super.dispatchEvent(event)
-    callEventHandler(this.getEventHandler(type), this as XMLHttpRequestEventTarget, event)
+    callEventHandler(this.getEventHandler(type), this.impl, event)
     return dispatched
   }
 
@@ -152,7 +154,7 @@ export function createCORSXMLHttpRequestConstructor(
   corsFetch: CORSFetchFunction,
   force = false
 ): typeof XMLHttpRequest {
-  class CORSXMLHttpRequest extends EventTarget {
+  class CORSXMLHttpRequest extends EventTarget implements XMLHttpRequest {
     public static readonly UNSENT = XHR_UNSENT
     public static readonly OPENED = XHR_OPENED
     public static readonly HEADERS_RECEIVED = XHR_HEADERS_RECEIVED
@@ -173,7 +175,10 @@ export function createCORSXMLHttpRequestConstructor(
     public onprogress: XHRProgressHandler = null
     public onreadystatechange: XHRReadyStateHandler = null
     public ontimeout: XHRProgressHandler = null
-    public readonly upload = new CORSXMLHttpRequestUpload() as XMLHttpRequestUpload
+    public readonly impl: XMLHttpRequest = this
+    public readonly upload: XMLHttpRequestUpload
+
+    private readonly uploadImpl = new CORSXMLHttpRequestUpload()
 
     private _abortController: AbortController | null = null
     private _activeRequestId = 0
@@ -202,6 +207,11 @@ export function createCORSXMLHttpRequestConstructor(
     private _url = ''
     private _username: string | null = null
     private _withCredentials = false
+
+    public constructor() {
+      super()
+      this.upload = this.uploadImpl.impl
+    }
 
     public get readyState() {
       return this._readyState
@@ -458,18 +468,14 @@ export function createCORSXMLHttpRequestConstructor(
     private emitProgress(type: string, loaded = this._loaded) {
       const event = createProgressEvent(type, this.getProgressInit(loaded))
       const dispatched = super.dispatchEvent(event)
-      callEventHandler(
-        this.getProgressEventHandler(type),
-        this as unknown as XMLHttpRequestEventTarget,
-        event
-      )
+      callEventHandler(this.getProgressEventHandler(type), this.impl, event)
       return dispatched
     }
 
     private emitReadyStateChange() {
       const event = new Event('readystatechange')
       const dispatched = super.dispatchEvent(event)
-      this.onreadystatechange?.call(this as unknown as XMLHttpRequest, event)
+      this.onreadystatechange?.call(this.impl, event)
       return dispatched
     }
 
@@ -483,11 +489,10 @@ export function createCORSXMLHttpRequestConstructor(
         total: loaded ?? 0
       }
 
-      const upload = this.upload as unknown as CORSXMLHttpRequestUpload
-      upload.emit('loadstart', init)
-      upload.emit('progress', init)
-      upload.emit('load', init)
-      upload.emit('loadend', init)
+      this.uploadImpl.emit('loadstart', init)
+      this.uploadImpl.emit('progress', init)
+      this.uploadImpl.emit('load', init)
+      this.uploadImpl.emit('loadend', init)
       this._uploadComplete = true
     }
 
@@ -656,5 +661,5 @@ export function createCORSXMLHttpRequestConstructor(
     }
   }
 
-  return CORSXMLHttpRequest as unknown as typeof XMLHttpRequest
+  return CORSXMLHttpRequest
 }
